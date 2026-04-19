@@ -30,3 +30,20 @@ Known gaps flagged during audit. Fix these before Phase 1 exit criteria are eval
   not install PEP 735 dev groups with `poetry install`.
 - Always run `poetry check` before `poetry lock` after editing pyproject.toml.
   It validates TOML grammar without any side effects.
+
+  ### Troubleshooting
+
+**`poetry run` fails with `ModuleNotFoundError` even though `poetry install` succeeded.**
+This is caused by VS Code's Python extension injecting `VIRTUAL_ENV` pointing at a system Python installation rather than the project's `.venv`. The repo includes `.vscode/settings.json` with `python.defaultInterpreterPath` set to `${workspaceFolder}/.venv/bin/python` to prevent this. If the issue still occurs after cloning:
+
+1. Open the project folder directly in VS Code (not a parent folder).
+2. Reload the window: `Cmd+Shift+P` → `Developer: Reload Window`.
+3. Select the correct interpreter manually: `Cmd+Shift+P` → `Python: Select Interpreter` → choose `./.venv/bin/python`.
+4. Open a new integrated terminal and verify: `echo $VIRTUAL_ENV` should print the path ending in `.venv`.
+5. As a fallback, invoke the venv directly instead of through Poetry: `.venv/bin/qa-agent ping` and `.venv/bin/pytest`.
+
+**`poetry run qa-agent ping` returns "mimik not reachable".**
+mimik AI Foundation does not auto-start. Check status with `mimoe status` and start with `mimoe start`.
+
+**`mimik reachable. model reply:` is followed by strange text.**
+The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fast local development. Its answers are often rambling or off-topic. For serious ISTQB Q&A quality, switch to a 3B or 7B instruct model by updating `MODEL_NAME` in `.env`.
