@@ -4,5 +4,29 @@ Known gaps flagged during audit. Fix these before Phase 1 exit criteria are eval
 
 - [ ] `chunker.py` uses words as the unit of measurement. CLAUDE.md Retrieval Strategy specifies tokens (chunk_size=500 tokens). The two are not equivalent — a word-based split will produce chunks of inconsistent token length.
 - [ ] `llm_client.py` logs `tokens_in=<word_count>` but the value is a word count, not a real token count. The label is misleading for anyone reading the logs.
+- [x] `llm_client.py` hardcoded `api_key="not-used"` (fixed: moved to `settings.mimik_api_key`)
+- [x] `MODEL_NAME` placeholder in `.env` (fixed: set to `smollm2-360m`)
 - [ ] `vector_store.py` hardcodes `{"hnsw:space": "cosine"}` directly in the collection creation call. CLAUDE.md says all retrieval parameters must live in `config.py` and be overridable via `.env`.
 - [ ] `config.py` field `embed_batch_size` must be verified against the key name used in `.env.example` when that file is created — confirm the env var is `EMBED_BATCH_SIZE` and matches pydantic-settings' automatic name resolution.
+
+## Post-Step-3
+- [ ] `smollm2-360m` (360M params) is too small for serious ISTQB Q&A.
+      Before Phase 1 Step 10 (golden suite), switch to a 3B or 7B
+      instruct model. Update `MODEL_NAME` in `.env` accordingly.
+- [ ] CLAUDE.md references env var `MIMIK_BASE_URL` in at least one
+      place but the code uses `MIMIK_ENDPOINT`. Reconcile naming so
+      CLAUDE.md matches `config.py`.
+
+## Troubleshooting notes (from Step 2 recovery)
+- If `poetry run pytest` reports pytest 8.x or Python 3.10, the Homebrew pytest
+  on PATH is shadowing the venv pytest. Verify with `which pytest` — if it
+  points outside `.venv/`, invoke `.venv/bin/pytest` directly or check that
+  `poetry install --with dev` actually populated the venv.
+- If `$VIRTUAL_ENV` is set to a non-venv path (e.g. a base Python framework),
+  VS Code's Python extension has activated a stale interpreter. Fix: reopen
+  the project folder in VS Code and select `.venv/bin/python` as interpreter.
+- `pyproject.toml` uses Poetry-native `[tool.poetry.group.dev.dependencies]`
+  syntax, not PEP 735 `[dependency-groups]`. Do not switch — Poetry 2.1.x does
+  not install PEP 735 dev groups with `poetry install`.
+- Always run `poetry check` before `poetry lock` after editing pyproject.toml.
+  It validates TOML grammar without any side effects.

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     mimik_endpoint: str = "http://localhost:8083/mimik-ai/openai/v1"
     model_name: str = "mistral"
+    mimik_api_key: str = "1234"
     chroma_path: str = "./chroma_db"
     chroma_collection: str = "istqb"
     top_k: int = 4

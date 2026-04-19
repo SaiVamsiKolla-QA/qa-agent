@@ -31,7 +31,7 @@ def chat(system_prompt: str, user_message: str) -> str:
     """
     client = OpenAI(
         base_url=settings.mimik_endpoint,
-        api_key="not-used",
+        api_key=settings.mimik_api_key,
         timeout=settings.llm_timeout,
     )
     messages = [
