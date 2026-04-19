@@ -173,7 +173,7 @@ http://localhost:8083/mimik-ai/openai/v1/chat/completions
 
 
 qa-agent/
-├── qa_agent/
+├── qa-expert-agent/
 │
 │ ├── init.py
 │ ├── cli.py

@@ -70,7 +70,7 @@ User question → CLI → qa_expert agent → vector_store.query() → llm_clien
 Repo layout:
 ```
 qa-agent/
-├── qa_agent/
+├── qa-expert-agent/
 │   ├── __init__.py
 │   ├── cli.py
 │   ├── config.py
