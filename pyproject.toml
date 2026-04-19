@@ -1,5 +1,8 @@
+[tool.poetry]
+packages = [{ include = "qa_agent" }]
+
 [project]
-name = "qa-agent"
+name = "qa-expert-agent"
 version = "0.1.0"
 description = "Local QA Expert Agent — ISTQB RAG mentor built from primitives"
 authors = [
@@ -15,11 +18,12 @@ dependencies = [
     "openai>=2.0",
 ]
 
-[dependency-groups]
-dev = [
-    "pytest>=9.0",
-    "ruff>=0.15",
-]
+[project.scripts]
+qa-agent = "qa_agent.cli:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.0"
+ruff = ">=0.15"
 
 [tool.ruff]
 line-length = 88
