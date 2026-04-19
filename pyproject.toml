@@ -1,0 +1,39 @@
+[project]
+name = "qa-agent"
+version = "0.1.0"
+description = "Local QA Expert Agent — ISTQB RAG mentor built from primitives"
+authors = [
+    {name = "Vamsi Kolla"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "pypdf>=6.0",
+    "chromadb>=1.5",
+    "sentence-transformers>=3.0",
+    "pydantic-settings>=2.0",
+    "openai>=2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.15",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration (deselect with '-m not integration')",
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
