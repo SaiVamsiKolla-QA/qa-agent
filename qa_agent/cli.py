@@ -51,6 +51,7 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
         f"chunk_size={settings.chunk_size} overlap={settings.chunk_overlap}"
     )
 
+    vector_store.reset_collection()
     vector_store.add_chunks(chunks)
 
     duration = round(time.monotonic() - start, 2)

@@ -46,6 +46,22 @@ def add_chunks(chunks: list[str]) -> None:
     )
 
 
+def reset_collection() -> None:
+    """Delete the collection and clear the cached client so the next
+    call to _get_collection recreates both fresh.
+    """
+    global _client
+    if _client is None:
+        _client = chromadb.PersistentClient(path=settings.chroma_path)
+    try:
+        _client.delete_collection(settings.chroma_collection)
+    except Exception:  # noqa: BLE001
+        # Collection may not exist yet; that's fine.
+        pass
+    _client = None
+    logger.info(f"collection_reset name={settings.chroma_collection}")
+
+
 def query(question: str, top_k: int | None = None) -> list[dict]:
     """Retrieve the most relevant chunks for a question.
 
