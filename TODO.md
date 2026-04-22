@@ -47,3 +47,10 @@ mimik AI Foundation does not auto-start. Check status with `mimoe status` and st
 
 **`mimik reachable. model reply:` is followed by strange text.**
 The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fast local development. Its answers are often rambling or off-topic. For serious ISTQB Q&A quality, switch to a 3B or 7B instruct model by updating `MODEL_NAME` in `.env`.
+## Post-Step-7
+- [x] Fixed: vector_store.py line 11 had `chromadb.PersistentClient | None`
+      as a module-level annotation that evaluated at import time.
+      ChromaDB 1.5.x exports PersistentClient as a factory function,
+      not a class, so the `|` union raised TypeError. Fix: added
+      `from __future__ import annotations` to defer annotation
+      evaluation. Surfaced by Step 7 tests. (Commit: fix(vector_store)...)
