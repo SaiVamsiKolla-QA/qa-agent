@@ -54,3 +54,18 @@ The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fa
       not a class, so the `|` union raised TypeError. Fix: added
       `from __future__ import annotations` to defer annotation
       evaluation. Surfaced by Step 7 tests. (Commit: fix(vector_store)...)
+
+## Post-Step-8
+- [ ] Logging verbosity: `logging.basicConfig(level=INFO)`
+      in cli.py turns on INFO for all libraries, producing
+      ~30 lines of httpx / transformers / pypdf noise during
+      ingestion. Silence third-party loggers by setting
+      `logging.getLogger("httpx").setLevel(WARNING)` and
+      similar for urllib3, transformers, pypdf. Keep
+      qa_agent's own loggers at INFO.
+- [ ] `chroma_db/` now contains a persistent ChromaDB
+      collection with 88 chunks from the Step 8 manual
+      smoke test. Running `ingest` again will accumulate
+      more chunks rather than replace them. Decide before
+      Step 10: should `ingest` replace the collection each
+      time, or append? Default behaviour today is append.
