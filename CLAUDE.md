@@ -6,9 +6,18 @@ Instructions for Claude Code when working in this repo. Read this before making 
 Build a local QA Expert Agent that reads ISTQB certification material and behaves like a Senior QA mentor. This is a **learning project** — the goal is to practice Python, end-to-end RAG, and agentic patterns built from primitives. Runs fully on mimik AI Foundation to dogfood the runtime while learning the mechanics underneath.
 
 ## Current Status
-**Phase 1, Step 3 in progress: ping CLI.**
+**Phase 1, Step 7 next: `vector_store.py` tests.**
 
-Pipeline modules (`config.py`, `llm_client.py`, `pdf_loader.py`, `chunker.py`, `embeddings.py`, `vector_store.py`) have been drafted by earlier sessions but have not yet been reviewed by the user or exercised end-to-end. `cli.py` does not exist yet. No test has been run successfully yet. The immediate next deliverable is `cli.py` with only a `ping` subcommand, so that `poetry run qa-agent ping` returns "pong" against real mimik.
+Steps 1–6 are complete and verified:
+- Steps 1–2: `pyproject.toml`, `config.py`, and their tests — confirmed passing.
+- Step 3: `cli.py` (ping subcommand) + `llm_client.py` + `test_llm_client.py` — mimik auth wired through config; `poetry run qa-agent ping` confirmed working against real mimik.
+- Step 4: `pdf_loader.py` + `test_pdf_loader.py` — 6 tests pass.
+- Step 5: `chunker.py` + `test_chunker.py` — 8 tests pass.
+- Step 6: `embeddings.py` + `test_embeddings.py` — 6 tests pass (real all-MiniLM-L6-v2, no mocking).
+- All 27 unit tests pass (`poetry run pytest tests/unit/`). Lint clean (`ruff check .`).
+- VIRTUAL_ENV injection bug fixed: `.vscode/settings.json` pins interpreter to `.venv/bin/python`.
+
+The immediate next deliverable is `tests/unit/test_vector_store.py` — unit tests for the existing `vector_store.py` module (ingest + query round-trip using an in-memory or `tmp_path`-backed ChromaDB instance, no mocking).
 
 *Update this section whenever the step or phase changes. Current status drives what Claude Code should and should not work on.*
 
