@@ -6,7 +6,6 @@ from pypdf import PdfWriter
 
 from qa_agent.pdf_loader import load_pdf
 
-
 # ---------------------------------------------------------------------------
 # Helpers — construct test PDFs entirely in memory, no committed fixtures
 # ---------------------------------------------------------------------------
