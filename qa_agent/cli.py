@@ -58,9 +58,20 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
     print(f"Ingested {len(chunks)} chunks from {pdf_path} in {duration}s")
 
 
+def _configure_logging() -> None:
+    """Set up logging: qa_agent loggers at INFO, third-party at WARNING."""
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    for noisy in (
+        "httpx", "httpcore", "urllib3",
+        "transformers", "sentence_transformers",
+        "pypdf", "chromadb",
+    ):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
 def main() -> None:
     """Entry point for the qa-agent CLI."""
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    _configure_logging()
 
     parser = argparse.ArgumentParser(
         prog="qa-agent",

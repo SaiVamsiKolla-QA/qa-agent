@@ -56,13 +56,15 @@ The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fa
       evaluation. Surfaced by Step 7 tests. (Commit: fix(vector_store)...)
 
 ## Post-Step-8
-- [ ] Logging verbosity: `logging.basicConfig(level=INFO)`
+- [x] Logging verbosity: `logging.basicConfig(level=INFO)`
       in cli.py turns on INFO for all libraries, producing
       ~30 lines of httpx / transformers / pypdf noise during
       ingestion. Silence third-party loggers by setting
       `logging.getLogger("httpx").setLevel(WARNING)` and
       similar for urllib3, transformers, pypdf. Keep
-      qa_agent's own loggers at INFO.
+      qa_agent's own loggers at INFO. (fixed: extracted
+      `_configure_logging()` in cli.py that silences noisy
+      third-party loggers after basicConfig)
 - [ ] `chroma_db/` now contains a persistent ChromaDB
       collection with 88 chunks from the Step 8 manual
       smoke test. Running `ingest` again will accumulate
