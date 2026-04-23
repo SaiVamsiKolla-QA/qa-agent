@@ -74,3 +74,23 @@ The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fa
       (fixed: ingest now replaces — `reset_collection()` added
       to vector_store.py; called in `_cmd_ingest` before
       `add_chunks`)
+
+## Pre-Step-9 (from Codex review)
+Four safeguards to fold into Step 9's ask flow:
+- [ ] Retrieval diagnostics logging — one INFO line per retrieved
+      chunk with score, source_doc, page
+- [ ] Citation-constrained prompt — LLM must emit structured output
+      with chunk_id or page references, not just prose citations
+- [ ] Abstain on weak evidence — if top similarity score < 0.35,
+      return "I don't have enough information from the available
+      documents" instead of calling the LLM
+- [ ] Token count check — log total prompt tokens before LLM call,
+      flag if > 1500 (smollm2 has ~2K context)
+
+## Step 10 scope note
+Minimum 10 golden questions (up from 5), drawn from CT-AI syllabus
+content since that's what's in the corpus. Classical ISTQB questions
+(equivalence partitioning, boundary values, decision tables) need
+CTFL syllabus ingested first — defer to Phase 2 unless adding it
+is trivial.
+
