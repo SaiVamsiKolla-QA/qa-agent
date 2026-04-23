@@ -110,8 +110,8 @@ def _write_blank_pdf(path: Path, num_pages: int = 1) -> None:
 # Tests
 # ---------------------------------------------------------------------------
 
-def test_pdf_loader_valid_pdf_returns_one_string_per_page(tmp_path: Path) -> None:
-    """load_pdf returns a list with exactly one entry per page."""
+def test_pdf_loader_returns_one_dict_per_page(tmp_path: Path) -> None:
+    """load_pdf returns a list with exactly one dict per page."""
     pdf = tmp_path / "two_pages.pdf"
     _write_text_pdf(pdf, ["first page text", "second page text"])
 
@@ -120,15 +120,37 @@ def test_pdf_loader_valid_pdf_returns_one_string_per_page(tmp_path: Path) -> Non
     assert len(result) == 2
 
 
+def test_pdf_loader_page_dicts_have_page_and_text_keys(tmp_path: Path) -> None:
+    """Each returned dict has exactly the keys 'page' and 'text'."""
+    pdf = tmp_path / "one_page.pdf"
+    _write_text_pdf(pdf, ["some text"])
+
+    result = load_pdf(pdf)
+
+    assert len(result) == 1
+    assert set(result[0].keys()) == {"page", "text"}
+
+
+def test_pdf_loader_pages_are_1_indexed(tmp_path: Path) -> None:
+    """Page numbers in returned dicts are 1-indexed."""
+    pdf = tmp_path / "two_pages.pdf"
+    _write_text_pdf(pdf, ["first", "second"])
+
+    result = load_pdf(pdf)
+
+    assert result[0]["page"] == 1
+    assert result[1]["page"] == 2
+
+
 def test_pdf_loader_text_content_appears_in_output(tmp_path: Path) -> None:
-    """load_pdf includes the text embedded in the PDF in the returned strings."""
+    """load_pdf includes the text embedded in the PDF in the returned dicts."""
     pdf = tmp_path / "content.pdf"
     _write_text_pdf(pdf, ["TESTMARKER"])
 
     result = load_pdf(pdf)
 
     assert len(result) == 1
-    assert "TESTMARKER" in result[0]
+    assert "TESTMARKER" in result[0]["text"]
 
 
 def test_pdf_loader_multipage_text_preserved_per_page(tmp_path: Path) -> None:
@@ -139,9 +161,9 @@ def test_pdf_loader_multipage_text_preserved_per_page(tmp_path: Path) -> None:
     result = load_pdf(pdf)
 
     assert len(result) == 3
-    assert "PAGEONE" in result[0]
-    assert "PAGETWO" in result[1]
-    assert "PAGETHREE" in result[2]
+    assert "PAGEONE" in result[0]["text"]
+    assert "PAGETWO" in result[1]["text"]
+    assert "PAGETHREE" in result[2]["text"]
 
 
 def test_pdf_loader_missing_file_raises_file_not_found(tmp_path: Path) -> None:

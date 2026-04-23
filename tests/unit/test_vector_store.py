@@ -12,6 +12,20 @@ import qa_agent.vector_store as _vs
 from qa_agent.vector_store import add_chunks, collection_count, query
 
 
+def _make_chunks(texts: list[str], source_doc: str = "test.pdf") -> list[dict]:
+    """Create minimal chunk dicts for testing add_chunks."""
+    return [
+        {
+            "text": t,
+            "source_doc": source_doc,
+            "page": 1,
+            "chunk_index": i,
+            "chunk_id": f"cid-{i:04d}",
+        }
+        for i, t in enumerate(texts)
+    ]
+
+
 @pytest.fixture(autouse=True)
 def _reset_store(tmp_path, monkeypatch):
     """Redirect ChromaDB to tmp_path and reset the cached client before each test."""
@@ -33,7 +47,7 @@ def test_vector_store_empty_collection_count_is_zero() -> None:
 
 def test_vector_store_count_reflects_added_chunks() -> None:
     """collection_count returns the exact number of chunks that were added."""
-    chunks = ["alpha chunk", "beta chunk", "gamma chunk"]
+    chunks = _make_chunks(["alpha chunk", "beta chunk", "gamma chunk"])
 
     add_chunks(chunks)
 
@@ -62,24 +76,38 @@ def test_vector_store_query_empty_collection_returns_empty_list() -> None:
     assert result == []
 
 
-def test_vector_store_query_result_dicts_have_text_and_score_keys() -> None:
-    """Every result dict contains exactly the keys 'text' and 'score'."""
-    add_chunks(["software testing validates application behaviour"])
+def test_vector_store_query_result_dicts_have_all_expected_keys() -> None:
+    """Every result dict contains text, score, source_doc, page, chunk_index, chunk_id."""
+    add_chunks(_make_chunks(["software testing validates application behaviour"]))
 
     results = query("testing", top_k=1)
 
     assert len(results) == 1
-    assert set(results[0].keys()) == {"text", "score"}
+    assert set(results[0].keys()) == {
+        "text", "score", "source_doc", "page", "chunk_index", "chunk_id"
+    }
+
+
+def test_vector_store_query_metadata_values_round_trip() -> None:
+    """Metadata stored in add_chunks is returned unchanged by query."""
+    add_chunks(_make_chunks(["software testing validates application behaviour"]))
+
+    results = query("testing", top_k=1)
+
+    assert results[0]["source_doc"] == "test.pdf"
+    assert results[0]["page"] == 1
+    assert results[0]["chunk_index"] == 0
+    assert results[0]["chunk_id"] == "cid-0000"
 
 
 def test_vector_store_query_top_k_limits_result_count() -> None:
     """top_k caps the number of returned results regardless of collection size."""
-    chunks = [
+    chunks = _make_chunks([
         "equivalence partitioning divides inputs into classes",
         "boundary value analysis tests at partition edges",
         "decision table testing combines condition combinations",
         "state transition testing covers state-change sequences",
-    ]
+    ])
     add_chunks(chunks)
 
     results = query("test design technique", top_k=2)
@@ -105,7 +133,7 @@ def test_vector_store_query_top_result_is_semantically_closest_chunk() -> None:
         "The Apollo 11 mission successfully landed astronauts on the lunar "
         "surface in July 1969, fulfilling the goal set by President Kennedy"
     )
-    add_chunks([testing_chunk, cooking_chunk, space_chunk])
+    add_chunks(_make_chunks([testing_chunk, cooking_chunk, space_chunk]))
 
     results = query("black-box test design methods for software quality", top_k=3)
 
@@ -114,7 +142,7 @@ def test_vector_store_query_top_result_is_semantically_closest_chunk() -> None:
 
 def test_vector_store_query_scores_are_in_valid_cosine_range() -> None:
     """Returned similarity scores fall within [0.0, 1.0]."""
-    add_chunks(["software testing finds defects in applications under test"])
+    add_chunks(_make_chunks(["software testing finds defects in applications under test"]))
 
     results = query("software defects", top_k=1)
 

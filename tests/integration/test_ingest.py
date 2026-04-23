@@ -107,7 +107,10 @@ def test_ingest_pipeline_stores_chunks_in_vector_store(tmp_path: Path) -> None:
     _make_text_pdf(pdf, body)
 
     pages = load_pdf(pdf)
-    chunks = chunk_texts(pages, settings.chunk_size, settings.chunk_overlap)
+    chunks = chunk_texts(
+        pages, settings.chunk_size, settings.chunk_overlap,
+        source_doc="istqb_test.pdf",
+    )
     add_chunks(chunks)
 
     assert collection_count() > 0
@@ -133,10 +136,15 @@ def test_ingest_pipeline_query_returns_chunk_containing_anchor_phrase(
     _make_text_pdf(pdf, body)
 
     pages = load_pdf(pdf)
-    chunks = chunk_texts(pages, settings.chunk_size, settings.chunk_overlap)
+    chunks = chunk_texts(
+        pages, settings.chunk_size, settings.chunk_overlap,
+        source_doc="istqb_test.pdf",
+    )
     add_chunks(chunks)
 
     results = query(anchor_phrase, top_k=settings.top_k)
 
     assert len(results) > 0
     assert any(anchor_phrase in r["text"] for r in results)
+    assert results[0]["source_doc"] == "istqb_test.pdf"
+    assert results[0]["page"] == 1

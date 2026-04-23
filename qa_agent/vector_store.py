@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 
 import chromadb
 
@@ -24,21 +23,31 @@ def _get_collection() -> chromadb.Collection:
     )
 
 
-def add_chunks(chunks: list[str]) -> None:
-    """Embed and store a list of text chunks in the vector store.
+def add_chunks(chunks: list[dict]) -> None:
+    """Embed and store a list of chunk dicts in the vector store.
 
     Args:
-        chunks: Text chunks to index.
+        chunks: Chunk dicts from chunker.chunk_texts, each with keys
+            text, source_doc, page, chunk_index, chunk_id.
     """
     if not chunks:
         logger.debug("vector_store_add_skipped reason=empty_chunks")
         return
 
     collection = _get_collection()
-    vectors = embed_texts(chunks)
-    ids = [str(uuid.uuid4()) for _ in chunks]
+    texts = [c["text"] for c in chunks]
+    vectors = embed_texts(texts)
+    ids = [c["chunk_id"] for c in chunks]
+    metadatas = [
+        {
+            "source_doc": c["source_doc"],
+            "page": c["page"],
+            "chunk_index": c["chunk_index"],
+        }
+        for c in chunks
+    ]
 
-    collection.add(documents=chunks, embeddings=vectors, ids=ids)
+    collection.add(documents=texts, embeddings=vectors, ids=ids, metadatas=metadatas)
 
     logger.info(
         f"vector_store_updated collection={settings.chroma_collection} "
@@ -79,16 +88,25 @@ def query(question: str, top_k: int | None = None) -> list[dict]:
     results = collection.query(
         query_embeddings=[question_vec],
         n_results=k,
-        include=["documents", "distances"],
+        include=["documents", "distances", "metadatas"],
     )
 
     docs = results["documents"][0] if results["documents"] else []
     distances = results["distances"][0] if results["distances"] else []
+    metadatas = results["metadatas"][0] if results["metadatas"] else []
+    ids = results["ids"][0] if results["ids"] else []
 
     # ChromaDB cosine distance: similarity = 1 - distance
     hits = [
-        {"text": doc, "score": round(1.0 - dist, 4)}
-        for doc, dist in zip(docs, distances)
+        {
+            "text": doc,
+            "score": round(1.0 - dist, 4),
+            "source_doc": meta.get("source_doc", ""),
+            "page": meta.get("page", 0),
+            "chunk_index": meta.get("chunk_index", 0),
+            "chunk_id": doc_id,
+        }
+        for doc, dist, meta, doc_id in zip(docs, distances, metadatas, ids)
     ]
 
     scores = [h["score"] for h in hits]

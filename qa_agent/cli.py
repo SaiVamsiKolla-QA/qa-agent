@@ -41,7 +41,10 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     try:
-        chunks = chunker.chunk_texts(pages, settings.chunk_size, settings.chunk_overlap)
+        chunks = chunker.chunk_texts(
+            pages, settings.chunk_size, settings.chunk_overlap,
+            source_doc=pdf_path.name,
+        )
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
