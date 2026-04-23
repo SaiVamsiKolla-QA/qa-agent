@@ -87,6 +87,24 @@ Four safeguards to fold into Step 9's ask flow:
 - [ ] Token count check — log total prompt tokens before LLM call,
       flag if > 1500 (smollm2 has ~2K context)
 
+- [ ] Library output noise (partial fix attempted twice, reverted both times):
+      sentence_transformers / huggingface_hub / transformers print
+      directly to stderr (not via logging or warnings) on model load:
+      "unauthenticated requests" warning, "Loading weights" progress
+      bar, "BertModel LOAD REPORT" block. Tried HF_HUB_DISABLE_IMPLICIT_TOKEN
+      (no effect), tried adding "huggingface_hub" to noisy-loggers list
+      (no effect since it's not a logger call). Accepted for now.
+      Future options: TRANSFORMERS_VERBOSITY=error env var, stderr
+      redirect during model load, or wait for lazy-import to make this
+      fire only in commands that actually embed.
+      Second attempt: Set HF_HUB_DISABLE_IMPLICIT_TOKEN=1 via
+      os.environ.setdefault at the top of _configure_logging, and added
+      huggingface_hub to the noisy-loggers list. Smoke test showed the
+      warning was still emitted — sentence_transformers writes this message
+      directly to stderr (not via logging or warnings), so neither approach
+      suppressed it. Fix reverted. Accepted as permanent cosmetic noise
+      unless TRANSFORMERS_VERBOSITY=error or stderr-redirect are attempted.
+
 ## Step 10 scope note
 Minimum 10 golden questions (up from 5), drawn from CT-AI syllabus
 content since that's what's in the corpus. Classical ISTQB questions

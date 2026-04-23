@@ -167,11 +167,9 @@ qa-expert-agent/
 │   ├── pdf_loader.py
 │   ├── chunker.py
 │   │
-│   ├── prompts/
-│   │   └── qa_expert.txt
+│   ├── prompts/               (Step 9)
 │   │
-│   └── agents/
-│       └── qa_expert.py
+│   └── agents/                (Step 9)
 │
 ├── data/
 │   └── istqb_docs/
@@ -180,8 +178,7 @@ qa-expert-agent/
 │
 ├── tests/
 │   ├── unit/
-│   ├── integration/
-│   └── golden/
+│   └── integration/
 │
 ├── pyproject.toml
 ├── .env.example
@@ -243,9 +240,7 @@ poetry run qa-agent ingest data/istqb_docs/<filename>.pdf
 
 ### Ask Questions
 
-```bash
-poetry run qa-agent ask "What is equivalence partitioning?"
-```
+Step 9 will add a `qa-agent ask` command for grounded QA answers — currently in development.
 
 ---
 
@@ -285,7 +280,7 @@ The goal is to understand how RAG systems work internally — not to wrap a fram
 
 | Phase | Status  | Description                              |
 |-------|---------|------------------------------------------|
-| 1     | Current | Document ingestion, chunking, embeddings, vector search, CLI QA agent |
+| 1     | Current | CLI ingest pipeline with provenance metadata (Steps 1–8b complete; Steps 9–10 in progress) |
 | 2     | Planned | Test case generator agent (BVA, EP, decision tables) |
 | 3     | Planned | QA interview coach with answer evaluation |
 | 4     | Planned | FastAPI service + optional web UI        |

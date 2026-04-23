@@ -6,18 +6,22 @@ Instructions for Claude Code when working in this repo. Read this before making 
 Build a local QA Expert Agent that reads ISTQB certification material and behaves like a Senior QA mentor. This is a **learning project** — the goal is to practice Python, end-to-end RAG, and agentic patterns built from primitives. Runs fully on mimik AI Foundation to dogfood the runtime while learning the mechanics underneath.
 
 ## Current Status
-**Phase 1, Step 7 next: `vector_store.py` tests.**
+**Phase 1, Step 9 next: QA Expert agent + ask subcommand.**
 
-Steps 1–6 are complete and verified:
+Steps 1–8b are complete and committed:
 - Steps 1–2: `pyproject.toml`, `config.py`, and their tests — confirmed passing.
 - Step 3: `cli.py` (ping subcommand) + `llm_client.py` + `test_llm_client.py` — mimik auth wired through config; `poetry run qa-agent ping` confirmed working against real mimik.
-- Step 4: `pdf_loader.py` + `test_pdf_loader.py` — 6 tests pass.
-- Step 5: `chunker.py` + `test_chunker.py` — 8 tests pass.
+- Step 4: `pdf_loader.py` + `test_pdf_loader.py` — 8 tests pass.
+- Step 5: `chunker.py` + `test_chunker.py` — 12 tests pass.
 - Step 6: `embeddings.py` + `test_embeddings.py` — 6 tests pass (real all-MiniLM-L6-v2, no mocking).
-- All 27 unit tests pass (`poetry run pytest tests/unit/`). Lint clean (`ruff check .`).
-- VIRTUAL_ENV injection bug fixed: `.vscode/settings.json` pins interpreter to `.venv/bin/python`.
+- Step 7: `vector_store.py` + `tests/unit/test_vector_store.py` — 9 tests pass (real ChromaDB, tmp_path-backed).
+- Step 8: `ingest` subcommand in `cli.py` + `tests/integration/test_ingest.py` — 2 integration tests pass.
+- Step 8b: provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) added to chunks and stored in ChromaDB.
+- 44 tests pass (42 unit + 2 integration). Lint clean (`ruff check .`).
+- mimOE serves `smollm2-360m` on `localhost:8083`.
+- ChromaDB holds 88 chunks of ISTQB CT-AI syllabus with full provenance metadata.
 
-The immediate next deliverable is `tests/unit/test_vector_store.py` — unit tests for the existing `vector_store.py` module (ingest + query round-trip using an in-memory or `tmp_path`-backed ChromaDB instance, no mocking).
+Remaining Phase 1 steps: Step 9 (ask flow with four Codex safeguards) and Step 10 (golden suite, ≥10 questions).
 
 *Update this section whenever the step or phase changes. Current status drives what Claude Code should and should not work on.*
 
@@ -68,7 +72,7 @@ Two pipelines, kept separate in code.
 
 **Ingestion pipeline (offline, run once per PDF):**
 ```
-PDF → pdf_loader → chunker → embeddings (batched) → vector_store.persist()
+PDF → pdf_loader → chunker → embeddings (batched) → vector_store.add_chunks()
 ```
 
 **Query pipeline (runtime):**
@@ -78,28 +82,27 @@ User question → CLI → qa_expert agent → vector_store.query() → llm_clien
 
 Repo layout:
 ```
-qa-agent/
-├── qa-expert-agent/
+qa-expert-agent/
+├── qa_agent/
 │   ├── __init__.py
 │   ├── cli.py
 │   ├── config.py
-│   ├── ingest.py
 │   ├── llm_client.py
 │   ├── embeddings.py
 │   ├── vector_store.py
 │   ├── pdf_loader.py
 │   ├── chunker.py
 │   ├── prompts/
-│   │   └── qa_expert.txt
+│   │   └── qa_expert.txt       # Step 9
 │   └── agents/
-│       └── qa_expert.py
+│       └── qa_expert.py        # Step 9
 ├── data/
 │   └── istqb_docs/             # gitignored
 ├── chroma_db/                  # gitignored
 ├── tests/
 │   ├── unit/
 │   ├── integration/
-│   └── golden/
+│   └── golden/                 # Step 10
 ├── pyproject.toml
 ├── .env.example
 └── CLAUDE.md
@@ -274,8 +277,7 @@ Phase 1 is executed as ten sequential steps. Each step is one Claude Code sessio
 | 5 | `chunker.py` + `tests/unit/test_chunker.py` | test verifies chunk size and overlap |
 | 6 | `embeddings.py` + `tests/unit/test_embeddings.py` | test verifies batching and vector dimensions |
 | 7 | `vector_store.py` + `tests/unit/test_vector_store.py` | test verifies ingest + query round-trip |
-| 8 | `ingest` subcommand in `cli.py` | `qa-agent ingest <pdf>` runs end-to-end with full INFO logs |
+| 8 | `ingest` subcommand in `cli.py` + `tests/integration/test_ingest.py` | `qa-agent ingest <pdf>` runs end-to-end with full INFO logs |
+| 8b | Provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) in chunks and ChromaDB | all 44 tests pass; `qa-agent ingest` stores metadata per chunk |
 | 9 | `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand | `qa-agent ask "<question>"` returns a grounded answer |
-| 10 | `tests/golden/test_rag_quality.py` with ≥5 Q&A pairs | golden suite passes. **Phase 1 complete.** |
-
-*Steps 1–2 were completed implicitly by earlier sessions but have not been verified. Steps 4–7 have code written but no tests run and no user review — they are provisionally done and must be re-verified during or after Step 3.*
+| 10 | `tests/golden/test_rag_quality.py` with ≥10 Q&A pairs | golden suite passes. **Phase 1 complete.** |
