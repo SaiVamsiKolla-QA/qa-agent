@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
     embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     embed_batch_size: int = 32
+    hnsw_space: str = "cosine"
     llm_timeout: int = 30
     prompts_dir: Path = Path(__file__).parent / "prompts"
 

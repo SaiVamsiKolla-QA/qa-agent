@@ -19,7 +19,7 @@ def _get_collection() -> chromadb.Collection:
         _client = chromadb.PersistentClient(path=settings.chroma_path)
     return _client.get_or_create_collection(
         name=settings.chroma_collection,
-        metadata={"hnsw:space": "cosine"},
+        metadata={"hnsw:space": settings.hnsw_space},
     )
 
 

@@ -39,8 +39,8 @@ def chat(system_prompt: str, user_message: str) -> str:
         {"role": "user", "content": user_message},
     ]
 
-    tokens_in = len(system_prompt.split()) + len(user_message.split())
-    logger.info(f"llm_called model={settings.model_name} tokens_in={tokens_in}")
+    words_in = len(system_prompt.split()) + len(user_message.split())
+    logger.info(f"llm_called model={settings.model_name} words_in={words_in}")
 
     for attempt in range(2):
         try:
