@@ -65,16 +65,17 @@ This repository demonstrates skills in:
 
 ## What the Agent Does
 
-The QA Expert Agent behaves like a Senior QA Engineer with 15+ years of experience mentoring a junior tester.
+### Currently working (Steps 1–8b)
 
-When you ask a question, the system:
+The ingestion pipeline loads ISTQB PDFs, splits them into overlapping chunks, generates embeddings with `sentence-transformers/all-MiniLM-L6-v2`, and stores them in ChromaDB with provenance metadata (source document, page number, chunk index, stable chunk ID). The vector store can be queried semantically via the Python API.
 
-1. Searches ISTQB material stored in a vector database
-2. Retrieves the most relevant sections
-3. Sends the retrieved context to a local LLM
-4. Generates a structured explanation
+Run `qa-agent ingest <pdf>` to load a document. The collection is replaced on each ingest run.
 
-### Response Format (5-part model)
+### In development (Step 9)
+
+The QA Expert Agent will behave like a Senior QA Engineer with 15+ years of experience mentoring a junior tester. When you ask a question, the system will search the vector store, retrieve the most relevant chunks, and pass them to a local LLM to generate a structured answer.
+
+**Planned response format (5-part model):**
 
 - **Definition** — ISTQB concept explanation
 - **Real project example** — practical usage
@@ -82,7 +83,7 @@ When you ask a question, the system:
 - **Common mistakes** — pitfalls
 - **Interview explanation** — how to explain in interviews
 
-The agent cites retrieved context and avoids hallucinations.
+The agent will cite retrieved chunks and abstain from answering when retrieval evidence is too weak.
 
 ---
 
@@ -101,7 +102,7 @@ chunker
 ↓
 embeddings
 ↓
-vector_store.persist()
+vector_store.add_chunks()
 ```
 
 Steps:
@@ -260,11 +261,7 @@ poetry run pytest -m integration
 
 ### Golden RAG Tests
 
-Validates concept correctness, ISTQB terminology coverage, and absence of hallucinations.
-
-```bash
-poetry run pytest tests/golden/
-```
+Step 10 will add a golden test suite at `tests/golden/` with ≥10 Q&A pairs evaluating concept correctness, ISTQB terminology coverage, and absence of hallucinations.
 
 ---
 

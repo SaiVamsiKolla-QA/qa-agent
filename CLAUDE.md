@@ -189,7 +189,7 @@ Do not log PDF content or full answers at INFO level — use DEBUG. Never log `.
 - **Unit tests** for every module in `qa_agent/`. A module is not considered complete without tests.
 - **Mock the mimik endpoint** in unit tests — do not hit real mimik in standard test runs.
 - **Integration tests** hit real mimik, live in `tests/integration/`, and are skipped by default (`@pytest.mark.integration`).
-- **RAG quality suite** — a golden set of ≥5 ISTQB Q&A pairs lives in `tests/golden/`. Passing this suite is the exit criterion for Phase 1.
+- **RAG quality suite** — a golden set of ≥10 ISTQB Q&A pairs lives in `tests/golden/`. Passing this suite is the exit criterion for Phase 1.
 - **Golden test scoring** — each golden Q&A is evaluated on three dimensions, all of which must pass:
   1. **Concept correctness** — the answer accurately describes the ISTQB concept being asked about.
   2. **Terminology coverage** — the answer uses correct canonical ISTQB vocabulary.
@@ -216,7 +216,7 @@ A step, feature, or phase is **done** only when all of these are true:
 - The step's exit test has been run by the user and produced the expected output.
 - For phase transitions: the phase's exit criterion is met (see roadmap below).
 
-**Phase 1 exit criterion:** ≥5 ISTQB questions from the golden set pass all three scoring dimensions (concept correctness, terminology coverage, hallucination absence).
+**Phase 1 exit criterion:** ≥10 ISTQB questions from the golden set pass all three scoring dimensions (concept correctness, terminology coverage, hallucination absence).
 
 ## Security
 - `.env` is gitignored. `.env.example` is committed with keys but no values.
@@ -266,7 +266,7 @@ Each phase must fully meet the Quality Gate before the next one begins.
 4. **Phase 4:** FastAPI wrapper over all three agents. Minimal web UI optional.
 
 ## Phase 1 Step Map
-Phase 1 is executed as ten sequential steps. Each step is one Claude Code session, one deliverable, one review checkpoint. Do not start step N+1 until step N's exit test has been run and confirmed by the user.
+Phase 1 is executed as ten primary steps plus one mid-course addition (Step 8b). Each step is one Claude Code session, one deliverable, one review checkpoint. Do not start step N+1 until step N's exit test has been run and confirmed by the user.
 
 | # | Deliverable | Exit test |
 |---|---|---|

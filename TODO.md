@@ -13,9 +13,10 @@ Known gaps flagged during audit. Fix these before Phase 1 exit criteria are eval
 - [ ] `smollm2-360m` (360M params) is too small for serious ISTQB Q&A.
       Before Phase 1 Step 10 (golden suite), switch to a 3B or 7B
       instruct model. Update `MODEL_NAME` in `.env` accordingly.
-- [ ] CLAUDE.md references env var `MIMIK_BASE_URL` in at least one
+- [x] CLAUDE.md references env var `MIMIK_BASE_URL` in at least one
       place but the code uses `MIMIK_ENDPOINT`. Reconcile naming so
-      CLAUDE.md matches `config.py`.
+      CLAUDE.md matches `config.py`. (resolved: CLAUDE.md no longer
+      references BASE_URL; config.py uses `mimik_endpoint`)
 
 ## Troubleshooting notes (from Step 2 recovery)
 - If `poetry run pytest` reports pytest 8.x or Python 3.10, the Homebrew pytest
