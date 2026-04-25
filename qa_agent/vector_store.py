@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 import chromadb
+from chromadb.errors import NotFoundError
 
 from qa_agent.config import settings
 from qa_agent.embeddings import embed_texts
@@ -64,8 +65,8 @@ def reset_collection() -> None:
         _client = chromadb.PersistentClient(path=settings.chroma_path)
     try:
         _client.delete_collection(settings.chroma_collection)
-    except Exception:  # noqa: BLE001
-        # Collection may not exist yet; that's fine.
+    except NotFoundError:
+        # Collection doesn't exist yet; that's fine on first ingest.
         pass
     _client = None
     logger.info(f"collection_reset name={settings.chroma_collection}")
