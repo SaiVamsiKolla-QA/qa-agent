@@ -78,15 +78,19 @@ The default model (`smollm2-360m`) is a small 360M-parameter model chosen for fa
 
 ## Pre-Step-9 (from Codex review)
 Four safeguards to fold into Step 9's ask flow:
-- [ ] Retrieval diagnostics logging — one INFO line per retrieved
+- [x] Retrieval diagnostics logging — one INFO line per retrieved
       chunk with score, source_doc, page
-- [ ] Citation-constrained prompt — LLM must emit structured output
+      (addressed in Step 9 design decisions)
+- [x] Citation-constrained prompt — LLM must emit structured output
       with chunk_id or page references, not just prose citations
-- [ ] Abstain on weak evidence — if top similarity score < 0.35,
+      (addressed in Step 9 design decisions)
+- [x] Abstain on weak evidence — if top similarity score < 0.35,
       return "I don't have enough information from the available
       documents" instead of calling the LLM
-- [ ] Token count check — log total prompt tokens before LLM call,
-      flag if > 1500 (smollm2 has ~2K context)
+      (addressed in Step 9 design decisions)
+- [ ] Token count check — design specified in CLAUDE.md Step 9 design
+      decisions section (1500-word threshold, WARNING log, module
+      constant in qa_expert.py). Implementation pending in Step 9.
 
 - [ ] Library output noise (partial fix attempted twice, reverted both times):
       sentence_transformers / huggingface_hub / transformers print

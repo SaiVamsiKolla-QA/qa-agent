@@ -145,7 +145,7 @@ The QA Expert agent's system prompt (`prompts/qa_expert.txt`) must enforce the f
 
 ## Error Handling
 - **mimik unreachable** — raise a specific `MimikUnavailableError` from `llm_client.py`. CLI catches it and prints a friendly message telling the user to start the runtime. Do not retry indefinitely.
-- **Empty retrieval** — if vector search returns no chunks, the agent must explicitly respond "no relevant context found for your question" rather than letting the LLM hallucinate an answer.
+- **Empty retrieval** — if vector search returns no chunks, the agent must explicitly respond "I don't have enough information from the available documents to answer this." rather than letting the LLM hallucinate an answer.
 - **PDF parse failure** — fail loudly during ingest. Never index a partially-parsed PDF silently.
 - **LLM timeout** — one retry with backoff, then fail. 30-second hard timeout per request.
 - Always log errors via `logging` at the appropriate level. Never use bare `except:` to swallow exceptions.
@@ -157,7 +157,7 @@ The QA Expert agent's system prompt (`prompts/qa_expert.txt`) must enforce the f
 - Functions under ~40 lines. Split if longer.
 - One agent = one module. Agents do not cross-import.
 - No hidden state in tools. Pure functions preferred.
-- Constants live in `config.py` or `.env`, never inline in source.
+- Constants live in `config.py` or `.env`, never inline in source — except for diagnostic guardrails internal to a single module (e.g., warning thresholds), which may be module-level constants.
 
 ## Observability
 Log at each pipeline stage using Python's `logging` module. Use **structured key=value format** so logs can be grepped and parsed.
@@ -178,7 +178,7 @@ INFO ingestion_completed   duration_s=<t>
 Minimum INFO events during **query**:
 ```
 INFO query_received        length_chars=<n>
-INFO retrieved             top_k=4 scores=[<s1>,<s2>,<s3>,<s4>]
+INFO retrieved             top_k=<n> scores=[<s1>, <s2>, ..., <sn>]
 INFO llm_called            model=<n> words_in=<n>
 INFO answer_returned       duration_s=<t>
 ```
@@ -318,6 +318,11 @@ DEBUG retrieved_chunk   rank=<i> score=<s> source_doc=<d> page=<p> chunk_id=<id>
 INFO  answer_returned   duration_s=<t>
 ```
 (One `retrieved_chunk` DEBUG line per chunk; visible only at DEBUG log level.)
+
+Prompt size safeguard:
+- After the user message is built (numbered context blocks + question) but before calling `llm_client.chat()`, check the word count of the combined system prompt + user message.
+- If word count > 1500, emit `WARNING prompt_words=<n> exceeds_threshold=True` and proceed with the call anyway. The warning is diagnostic, not blocking — smollm2 may still produce a useful answer; we just want the size visible.
+- Threshold (1500) is a module-level constant in `qa_expert.py`: `_PROMPT_WORD_WARN_THRESHOLD = 1500`. Not in config — this is a diagnostic guardrail for development, not a runtime parameter.
 
 `cli.py` `_cmd_ask` is a thin adapter: emits no logging itself. Catches `MimikUnavailableError`, prints to stderr, exits 1 — same pattern as `_cmd_ping`.
 
