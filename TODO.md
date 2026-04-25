@@ -110,6 +110,15 @@ Four safeguards to fold into Step 9's ask flow:
       suppressed it. Fix reverted. Accepted as permanent cosmetic noise
       unless TRANSFORMERS_VERBOSITY=error or stderr-redirect are attempted.
 
+## Post-Step-9
+- [ ] top_k temporarily reduced from 4 to 2 in config.py.
+      smollm2-360m's context window (~2K tokens) cannot fit
+      4 retrieved chunks (~500 words each) plus system prompt
+      plus question. First smoke test of qa-agent ask failed
+      with llama_decode() error. After Step 10 model upgrade
+      to a 3B+ instruct model with 4K+ context, restore top_k
+      to 4 (or higher).
+
 ## Step 10 scope note
 Minimum 10 golden questions (up from 5), drawn from CT-AI syllabus
 content since that's what's in the corpus. Classical ISTQB questions

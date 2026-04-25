@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     mimik_api_key: str = "1234"
     chroma_path: str = "./chroma_db"
     chroma_collection: str = "istqb"
-    top_k: int = 4
+    top_k: int = 2
     abstain_threshold: float = 0.35
     chunk_size: int = 500
     chunk_overlap: int = 100

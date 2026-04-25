@@ -19,7 +19,7 @@ def test_settings_default_chunk_overlap() -> None:
 
 def test_settings_default_top_k() -> None:
     s = Settings(_env_file=None)
-    assert s.top_k == 4
+    assert s.top_k == 2
 
 
 def test_settings_default_embed_batch_size() -> None:
