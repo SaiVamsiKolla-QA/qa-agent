@@ -179,7 +179,7 @@ Minimum INFO events during **query**:
 ```
 INFO query_received        length_chars=<n>
 INFO retrieved             top_k=4 scores=[<s1>,<s2>,<s3>,<s4>]
-INFO llm_called            model=<n> tokens_in=<n>
+INFO llm_called            model=<n> words_in=<n>
 INFO answer_returned       duration_s=<t>
 ```
 
@@ -281,3 +281,50 @@ Phase 1 is executed as ten primary steps plus one mid-course addition (Step 8b).
 | 8b | Provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) in chunks and ChromaDB | all 44 tests pass; `qa-agent ingest` stores metadata per chunk |
 | 9 | `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand | `qa-agent ask "<question>"` returns a grounded answer |
 | 10 | `tests/golden/test_rag_quality.py` with ≥10 Q&A pairs | golden suite passes. **Phase 1 complete.** |
+
+### Step 9 design decisions
+
+Citation format:
+- LLM output uses inline `[page N]` markers for specific claims.
+- Answer ends with a References block listing source_doc, page, and chunk_id for each cited chunk.
+
+Context block format (built by `qa_expert.answer`, passed in user message):
+
+```
+[1] Source: <source_doc> | Page <page> | chunk_id: <id>
+<chunk text>
+
+[2] Source: <source_doc> | Page <page> | chunk_id: <id>
+<chunk text>
+
+...
+
+Question: <user question>
+```
+
+System prompt = persona + output format instructions from `qa_agent/prompts/qa_expert.txt` (static, never varies per query).
+User message = numbered context blocks + question (dynamic per-call).
+
+Abstain behavior:
+- If hits is empty, return fixed message: "I don't have enough information from the available documents to answer this."
+- If `hits[0]["score"] < settings.abstain_threshold`, return same fixed message. Default threshold: 0.35.
+- In both abstain cases, do NOT call the LLM.
+
+Logging events emitted from `qa_expert.answer()`:
+```
+INFO  query_received    length_chars=<n>
+INFO  retrieved         top_k=<n> scores=[<s1>, <s2>, ...]
+DEBUG retrieved_chunk   rank=<i> score=<s> source_doc=<d> page=<p> chunk_id=<id>
+INFO  answer_returned   duration_s=<t>
+```
+(One `retrieved_chunk` DEBUG line per chunk; visible only at DEBUG log level.)
+
+`cli.py` `_cmd_ask` is a thin adapter: emits no logging itself. Catches `MimikUnavailableError`, prints to stderr, exits 1 — same pattern as `_cmd_ping`.
+
+Unit test scope for Step 9 (`tests/unit/test_qa_expert.py`):
+- `test_answer_returns_abstain_when_top_score_below_threshold`
+- `test_answer_returns_no_context_when_retrieval_empty`
+- `test_answer_calls_llm_when_top_score_above_threshold`
+- `test_answer_propagates_mimik_unavailable`
+
+All four tests use mocked `vector_store.query` and `llm_client.chat`. Behavioral quality of real answers is validated by the Step 10 golden suite, not Step 9 unit tests.

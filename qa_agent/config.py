@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     chroma_path: str = "./chroma_db"
     chroma_collection: str = "istqb"
     top_k: int = 4
+    abstain_threshold: float = 0.35
     chunk_size: int = 500
     chunk_overlap: int = 100
     embed_model: str = "sentence-transformers/all-MiniLM-L6-v2"
