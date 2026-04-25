@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 
 from qa_agent import chunker, pdf_loader, vector_store
+from qa_agent.agents import qa_expert
 from qa_agent.config import settings
 from qa_agent.llm_client import MimikUnavailableError, chat
 
@@ -62,6 +63,16 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
     print(f"Ingested {len(chunks)} chunks from {pdf_path} in {duration}s")
 
 
+def _cmd_ask(args: argparse.Namespace) -> None:
+    """Handle the ask subcommand — answer an ISTQB question."""
+    try:
+        result = qa_expert.answer(args.question)
+        print(result)
+    except MimikUnavailableError as exc:
+        print(f"Error: mimik is not reachable. {exc}", file=sys.stderr)
+        sys.exit(1)
+
+
 def _configure_logging() -> None:
     """Set up logging: qa_agent loggers at INFO, third-party at WARNING."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -94,6 +105,10 @@ def main() -> None:
     )
     ingest_parser.add_argument("pdf_path", type=Path)
     ingest_parser.set_defaults(func=_cmd_ingest)
+
+    ask_parser = subparsers.add_parser("ask", help="Ask the QA agent a question.")
+    ask_parser.add_argument("question", type=str, help="The question to ask.")
+    ask_parser.set_defaults(func=_cmd_ask)
 
     args = parser.parse_args()
     args.func(args)
