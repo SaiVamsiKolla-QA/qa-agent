@@ -158,3 +158,119 @@ def test_answer_emits_warning_when_prompt_exceeds_word_threshold(
         f"Expected exactly one prompt_words warning, got {len(warning_records)}"
     )
     assert "exceeds_threshold=True" in warning_records[0].message
+
+
+# ---------------------------------------------------------------------------
+# _build_user_message — prompt assembly contract
+# ---------------------------------------------------------------------------
+
+
+def test_build_user_message_includes_required_metadata_fields_per_block():
+    """Each context block must contain source_doc, page, chunk_id, and text,
+    with 'Question:' at the end."""
+    from qa_agent.agents.qa_expert import _build_user_message
+
+    hits = [
+        {
+            "text": "First chunk content.",
+            "score": 0.62,
+            "source_doc": "ct-ai-syllabus.pdf",
+            "page": 12,
+            "chunk_index": 0,
+            "chunk_id": "abc123",
+        },
+        {
+            "text": "Second chunk content.",
+            "score": 0.55,
+            "source_doc": "ct-ai-syllabus.pdf",
+            "page": 18,
+            "chunk_index": 1,
+            "chunk_id": "def456",
+        },
+    ]
+    question = "What is metamorphic testing?"
+
+    result = _build_user_message(hits, question)
+
+    assert "[1]" in result
+    assert "ct-ai-syllabus.pdf" in result
+    assert "Page 12" in result
+    assert "chunk_id: abc123" in result
+    assert "First chunk content." in result
+
+    assert "[2]" in result
+    assert "Page 18" in result
+    assert "chunk_id: def456" in result
+    assert "Second chunk content." in result
+
+    assert "Question: What is metamorphic testing?" in result
+
+
+def test_build_user_message_preserves_hit_rank_order():
+    """Hits in input order [0, 1, 2] produce numbered blocks [1], [2], [3]
+    in the same positional order in the output string."""
+    from qa_agent.agents.qa_expert import _build_user_message
+
+    hits = [
+        {
+            "text": f"Content for chunk {i}.",
+            "score": 0.6 - i * 0.05,
+            "source_doc": "test.pdf",
+            "page": i + 1,
+            "chunk_index": i,
+            "chunk_id": f"chunk{i}",
+        }
+        for i in range(3)
+    ]
+
+    result = _build_user_message(hits, "test question")
+
+    pos_1 = result.find("[1]")
+    pos_2 = result.find("[2]")
+    pos_3 = result.find("[3]")
+
+    assert pos_1 != -1
+    assert pos_2 != -1
+    assert pos_3 != -1
+    assert pos_1 < pos_2 < pos_3
+
+    block_1 = result[pos_1:pos_2]
+    block_3 = result[pos_3:]
+    assert "Content for chunk 0." in block_1
+    assert "chunk_id: chunk0" in block_1
+    assert "Content for chunk 2." in block_3
+    assert "chunk_id: chunk2" in block_3
+
+
+def test_answer_does_not_warn_when_prompt_below_threshold(
+    stub_prompts_dir, caplog
+):
+    """Prompt below 1500 words must NOT emit a prompt_words WARNING."""
+    assert (stub_prompts_dir / "qa_expert.txt").exists()
+    small_hit = {
+        "text": "A short chunk of content.",
+        "score": 0.62,
+        "source_doc": "test.pdf",
+        "page": 1,
+        "chunk_index": 0,
+        "chunk_id": "small1",
+    }
+
+    with (
+        patch("qa_agent.agents.qa_expert.vector_store.query") as mock_query,
+        patch("qa_agent.agents.qa_expert.llm_client.chat") as mock_chat,
+    ):
+        mock_query.return_value = [small_hit]
+        mock_chat.return_value = "answer"
+
+        with caplog.at_level(logging.WARNING, logger="qa_agent.agents.qa_expert"):
+            qa_expert.answer("What is metamorphic testing?")
+
+    warning_records = [
+        r
+        for r in caplog.records
+        if r.levelno == logging.WARNING and "prompt_words" in r.message
+    ]
+    assert len(warning_records) == 0, (
+        f"Expected no prompt_words warning, got {len(warning_records)}"
+    )
