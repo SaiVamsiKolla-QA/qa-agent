@@ -2,10 +2,10 @@
 
 A local RAG-based ISTQB mentor that answers software testing questions grounded in retrieved ISTQB documentation, running entirely on [mimik AI Foundation](https://mimik.com).
 
-Built from primitives (no LangChain, no LlamaIndex) as a learning project in Python, embeddings, and RAG mechanics. The full ingestion and query pipeline is implemented; the golden evaluation suite (Step 10) is the remaining work. The system runs on `smollm2-360m` (360M params), which is too small for reliable structured output — answers work, but don't consistently follow the five-part format. See Known Limitations.
+Built from primitives (no LangChain, no LlamaIndex) as a learning project in Python, embeddings, and RAG mechanics. Phase 1 is complete. The system runs on `smollm2-360m` (360M params), which is too small for reliable structured output — answers work, but don't consistently follow the five-part format. RESULTS.md documents the 3/10 baseline. See Known Limitations.
 
-**What's working:** `qa-agent ingest` (PDF → ChromaDB), `qa-agent ask` (question → grounded answer with abstain logic and citations), 48 passing tests.  
-**Not implemented:** Step 10 golden test suite. No web interface, no multi-turn memory, no second agent.
+**What's working:** `qa-agent ingest` (PDF → ChromaDB), `qa-agent ask` (question → grounded answer with abstain logic and citations), 52 passing tests, golden evaluation harness with published results.  
+**Not implemented:** No web interface, no multi-turn memory, no second agent.
 
 ---
 
@@ -77,8 +77,8 @@ All retrieval parameters (`top_k`, `abstain_threshold`, `chunk_size`, `hnsw_spac
 ### Run tests
 
 ```bash
-poetry run pytest                   # 48 unit tests (no mimOE needed)
-poetry run pytest -m integration    # 2 integration tests (needs mimOE running)
+poetry run pytest                   # 52 tests (unit + integration; no mimOE needed)
+poetry run pytest tests/golden/ -v  # golden evaluation suite (needs mimOE running)
 ```
 
 ### Ingest a document

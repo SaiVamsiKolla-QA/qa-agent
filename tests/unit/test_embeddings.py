@@ -4,6 +4,7 @@ Uses the real all-MiniLM-L6-v2 model — no mocking.
 First run downloads ~80 MB and caches in ~/.cache/huggingface/hub/.
 Subsequent runs are fully offline.
 """
+
 import math
 
 from qa_agent.embeddings import embed_texts

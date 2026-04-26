@@ -52,13 +52,15 @@ def chunk_texts(
             chunk_id = hashlib.sha1(
                 f"{source_doc}:{chunk_index}:{text[:100]}".encode()
             ).hexdigest()[:16]
-            chunks.append({
-                "text": text,
-                "source_doc": source_doc,
-                "page": page,
-                "chunk_index": chunk_index,
-                "chunk_id": chunk_id,
-            })
+            chunks.append(
+                {
+                    "text": text,
+                    "source_doc": source_doc,
+                    "page": page,
+                    "chunk_index": chunk_index,
+                    "chunk_id": chunk_id,
+                }
+            )
             chunk_index += 1
         start += stride
 

@@ -7,6 +7,7 @@ Usage:
 
 Intended for Step 9 prompt-size diagnostics.
 """
+
 import argparse
 import sys
 
@@ -29,7 +30,9 @@ def count_tokens(text: str, encoding_name: str = "cl100k_base") -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Count tokens in text (uses tiktoken when available, word count fallback)."
+        description=(
+            "Count tokens in text (uses tiktoken when available, word count fallback)."
+        )
     )
     parser.add_argument(
         "text",

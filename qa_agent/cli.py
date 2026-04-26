@@ -43,7 +43,9 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
 
     try:
         chunks = chunker.chunk_texts(
-            pages, settings.chunk_size, settings.chunk_overlap,
+            pages,
+            settings.chunk_size,
+            settings.chunk_overlap,
             source_doc=pdf_path.name,
         )
     except ValueError as exc:
@@ -77,9 +79,13 @@ def _configure_logging() -> None:
     """Set up logging: qa_agent loggers at INFO, third-party at WARNING."""
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     for noisy in (
-        "httpx", "httpcore", "urllib3",
-        "transformers", "sentence_transformers",
-        "pypdf", "chromadb",
+        "httpx",
+        "httpcore",
+        "urllib3",
+        "transformers",
+        "sentence_transformers",
+        "pypdf",
+        "chromadb",
     ):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 

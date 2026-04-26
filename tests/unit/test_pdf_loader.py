@@ -1,4 +1,5 @@
 """Unit tests for qa_agent.pdf_loader.load_pdf."""
+
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ from qa_agent.pdf_loader import load_pdf
 # ---------------------------------------------------------------------------
 # Helpers — construct test PDFs entirely in memory, no committed fixtures
 # ---------------------------------------------------------------------------
+
 
 def _write_text_pdf(path: Path, pages_text: list[str]) -> None:
     """Write a minimal valid PDF with extractable text to *path*.
@@ -62,10 +64,7 @@ def _write_text_pdf(path: Path, pages_text: list[str]) -> None:
     # Content streams — one per page
     for i, cid in enumerate(content_ids):
         safe = (
-            pages_text[i]
-            .replace("\\", "\\\\")
-            .replace("(", "\\(")
-            .replace(")", "\\)")
+            pages_text[i].replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
         )
         stream = f"BT /F1 12 Tf 50 700 Td ({safe}) Tj ET".encode()
         start_obj(cid)
@@ -109,6 +108,7 @@ def _write_blank_pdf(path: Path, num_pages: int = 1) -> None:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_pdf_loader_returns_one_dict_per_page(tmp_path: Path) -> None:
     """load_pdf returns a list with exactly one dict per page."""

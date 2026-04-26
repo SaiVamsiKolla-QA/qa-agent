@@ -7,7 +7,7 @@ Known gaps flagged during audit. Fix these before Phase 1 exit criteria are eval
 - [x] `llm_client.py` hardcoded `api_key="not-used"` (fixed: moved to `settings.mimik_api_key`)
 - [x] `MODEL_NAME` placeholder in `.env` (fixed: set to `smollm2-360m`)
 - [x] `vector_store.py` hardcodes `{"hnsw:space": "cosine"}` directly in the collection creation call. CLAUDE.md says all retrieval parameters must live in `config.py` and be overridable via `.env`. (fixed: moved to settings.hnsw_space)
-- [ ] `config.py` field `embed_batch_size` must be verified against the key name used in `.env.example` when that file is created — confirm the env var is `EMBED_BATCH_SIZE` and matches pydantic-settings' automatic name resolution.
+- [x] `config.py` field `embed_batch_size` verified against `.env.example`. `EMBED_BATCH_SIZE=32` in `.env.example` matches `embed_batch_size: int = 32` in `config.py` via pydantic-settings auto-uppercase. (verified during final closeout audit)
 
 ## Post-Step-3
 - [x] `smollm2-360m` (360M params) is too small for serious ISTQB Q&A.

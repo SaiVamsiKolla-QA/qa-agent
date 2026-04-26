@@ -11,4 +11,6 @@ def ensure_mimik_running() -> None:
     try:
         chat("Reply with pong only.", "ping")
     except MimikUnavailableError:
-        pytest.skip("mimik not reachable; skipping golden suite — start with: mimoe start")
+        pytest.skip(
+            "mimik not reachable; skipping golden suite — start with: mimoe start"
+        )

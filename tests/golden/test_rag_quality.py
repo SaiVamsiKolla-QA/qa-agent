@@ -21,7 +21,7 @@ _entries = json.loads(_GOLDEN_PATH.read_text())
 
 @pytest.mark.parametrize("entry", _entries, ids=[e["id"] for e in _entries])
 def test_istqb_question(entry: dict) -> None:
-    """Evaluate ISTQB concept questions on correctness, terminology, and hallucination."""
+    """Evaluate ISTQB concept questions on correctness, terminology, hallucination."""
     if entry["type"] != "istqb":
         pytest.skip("not an istqb entry")
 

@@ -80,7 +80,8 @@ def query(question: str, top_k: int | None = None) -> list[dict]:
         top_k: Number of results to return; defaults to config value.
 
     Returns:
-        List of dicts with keys ``text`` and ``score``.
+        List of dicts with keys: text, score, source_doc, page,
+        chunk_index, chunk_id.
     """
     k = top_k or settings.top_k
     collection = _get_collection()

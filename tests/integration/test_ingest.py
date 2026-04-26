@@ -3,6 +3,7 @@
 Runs load_pdf → chunk_texts → add_chunks end-to-end against a real
 ChromaDB instance (tmp_path-backed) and real embeddings — no mocking.
 """
+
 from pathlib import Path
 
 import pytest
@@ -21,11 +22,7 @@ def _make_text_pdf(path: Path, text: str) -> None:
     1=Catalog, 2=Pages, 3=Page, 4=Content stream, 5=Font.
     """
     buf = bytearray()
-    safe = (
-        text.replace("\\", "\\\\")
-        .replace("(", "\\(")
-        .replace(")", "\\)")
-    )
+    safe = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
     stream = f"BT /F1 12 Tf 50 700 Td ({safe}) Tj ET".encode()
 
     xref_offsets: list[int] = []
@@ -108,7 +105,9 @@ def test_ingest_pipeline_stores_chunks_in_vector_store(tmp_path: Path) -> None:
 
     pages = load_pdf(pdf)
     chunks = chunk_texts(
-        pages, settings.chunk_size, settings.chunk_overlap,
+        pages,
+        settings.chunk_size,
+        settings.chunk_overlap,
         source_doc="istqb_test.pdf",
     )
     add_chunks(chunks)
@@ -137,7 +136,9 @@ def test_ingest_pipeline_query_returns_chunk_containing_anchor_phrase(
 
     pages = load_pdf(pdf)
     chunks = chunk_texts(
-        pages, settings.chunk_size, settings.chunk_overlap,
+        pages,
+        settings.chunk_size,
+        settings.chunk_overlap,
         source_doc="istqb_test.pdf",
     )
     add_chunks(chunks)

@@ -31,7 +31,9 @@ def test_cmd_ask_calls_qa_expert_and_prints_result(
     capsys: pytest.CaptureFixture,
 ) -> None:
     args = argparse.Namespace(question="What is metamorphic testing?")
-    with patch("qa_agent.cli.qa_expert.answer", return_value="test answer") as mock_answer:
+    with patch(
+        "qa_agent.cli.qa_expert.answer", return_value="test answer"
+    ) as mock_answer:
         _cmd_ask(args)
     assert "test answer" in capsys.readouterr().out
     mock_answer.assert_called_once_with(args.question)

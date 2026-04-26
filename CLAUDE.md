@@ -6,25 +6,25 @@ Instructions for Claude Code when working in this repo. Read this before making 
 Build a local QA Expert Agent that reads ISTQB certification material and behaves like a Senior QA mentor. This is a **learning project** — the goal is to practice Python, end-to-end RAG, and agentic patterns built from primitives. Runs fully on mimik AI Foundation to dogfood the runtime while learning the mechanics underneath.
 
 ## Current Status
-**Steps 1–9 complete. Step 10 (golden test suite) remaining.**
+**Phase 1 complete. All 10 steps shipped plus three post-Phase-1 polish commits (CLI test coverage, abstain boundary test, substantive RESULTS.md observations).**
 
-All implementation steps are complete and committed:
-- Steps 1–2: `pyproject.toml`, `config.py`, and their tests — confirmed passing.
-- Step 3: `cli.py` (ping subcommand) + `llm_client.py` + `test_llm_client.py` — mimik auth wired through config.
-- Step 4: `pdf_loader.py` + `test_pdf_loader.py` — 8 tests pass.
-- Step 5: `chunker.py` + `test_chunker.py` — 12 tests pass.
-- Step 6: `embeddings.py` + `test_embeddings.py` — 6 tests pass (real all-MiniLM-L6-v2, no mocking).
-- Step 7: `vector_store.py` + `tests/unit/test_vector_store.py` — 9 tests pass (real ChromaDB, tmp_path-backed).
-- Step 8: `ingest` subcommand in `cli.py` + `tests/integration/test_ingest.py` — 2 integration tests pass.
+All implementation steps complete and committed:
+- Steps 1–2: `pyproject.toml`, `config.py`, and their tests.
+- Step 3: `cli.py` (ping subcommand) + `llm_client.py` + tests.
+- Step 4: `pdf_loader.py` + 8 tests.
+- Step 5: `chunker.py` + 12 tests.
+- Step 6: `embeddings.py` + 6 tests (real all-MiniLM-L6-v2, no mocking).
+- Step 7: `vector_store.py` + 9 tests (real ChromaDB, tmp_path-backed).
+- Step 8: `ingest` subcommand in `cli.py` + 2 integration tests.
 - Step 8b: provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) added to chunks and stored in ChromaDB.
-- Step 9: `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand in `cli.py` + `tests/unit/test_qa_expert.py` — 4 unit tests pass. `qa-agent ask` returns grounded answers with abstain logic.
-- 48 tests pass (46 unit + 2 integration). Lint clean (`ruff check .`).
+- Step 9: `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand + 5 tests (4 original + 1 boundary test added in polish).
+- Step 10: golden test harness + 10-question evaluation set + RESULTS.md with substantive observations.
+- Post-Phase-1: `tests/unit/test_cli.py` with 3 tests.
+- **52 tests pass (50 unit + 2 integration). Lint clean (`ruff check .`).**
 - mimOE serves `smollm2-360m` on `localhost:8083`.
 - ChromaDB holds 68 chunks of ISTQB CT-AI syllabus with full provenance metadata.
 
-Remaining: Step 10 — implement golden test harness (≥10 Q&A pairs), run it, document results honestly.
-
-**Known limitation:** `smollm2-360m` (360M params) is too small for reliable structured output. Step 10 results will reflect this. See Known Limitations section below.
+**Known limitation:** `smollm2-360m` (360M params) is too small for reliable structured output. RESULTS.md publishes the 3/10 baseline. See Known Limitations section below.
 
 *Update this section whenever the step changes. Current status drives what Claude Code should and should not work on.*
 
@@ -53,14 +53,14 @@ These are fixed. Do not substitute without explicit instruction.
 - **Package manager:** Poetry (PEP 621 `[project]` metadata style)
 - **LLM runtime:** mimik AI Foundation (local, OpenAI-compatible endpoint on `localhost:8083`)
 - **LLM client library:** `openai` SDK pointed at the local mimik base URL
-- **Model:** GGUF instruct model, Q4_K_M quantization. Default ~3B parameters; ~7B if host RAM ≥ 32 GB. Exact model name lives in `.env`.
+- **Model:** Current: `smollm2-360m` (360M parameters). Originally targeted 3B+ GGUF instruct models; downgraded to fit local development constraints. See Known Limitations and TODO.md Post-Phase-1 future work for upgrade plan. Exact model name lives in `.env`.
 - **Embeddings:** `sentence-transformers/all-MiniLM-L6-v2`
 - **Vector store:** ChromaDB (local persistent, `./chroma_db/`)
 - **PDF parsing:** `pypdf`
 - **Config:** `pydantic-settings`, loaded from `.env`
 - **Testing:** `pytest`
 - **Lint/format:** `ruff`
-- **Interface:** CLI only until Phase 4
+- **Interface:** CLI only.
 
 ### Forbidden Tools
 Do not add any of these without explicit approval in a PR description. This list exists to protect the learning goal — frameworks that hide RAG and agent mechanics are off-limits on purpose.
@@ -116,7 +116,7 @@ These parameters drive RAG quality. All of them live in `config.py` and are over
 
 - **Chunk size:** 500 tokens (default). Valid range 500–800.
 - **Chunk overlap:** 100 tokens.
-- **Top-k retrieval:** 4.
+- **Top-k retrieval:** 2 (temporarily reduced from 4; see Known Limitations section for context window rationale).
 - **Similarity metric:** cosine.
 - **Tuning rule:** do not tune these parameters until the golden test suite (see Testing Strategy) has a stable baseline. Chase retrieval quality before prompt quality — if answers are wrong, inspect retrieved chunks first, prompt second.
 
@@ -191,7 +191,7 @@ Do not log PDF content or full answers at INFO level — use DEBUG. Never log `.
 ## Testing Strategy
 - **Unit tests** for every module in `qa_agent/`. A module is not considered complete without tests.
 - **Mock the mimik endpoint** in unit tests — do not hit real mimik in standard test runs.
-- **Integration tests** hit real mimik, live in `tests/integration/`, and are skipped by default (`@pytest.mark.integration`).
+- **Integration tests** hit real ChromaDB and real embedding models (no mimik / no LLM calls). They live in `tests/integration/` and run as part of the default `poetry run pytest` suite.
 - **RAG quality suite** — a golden set of ≥10 ISTQB Q&A pairs lives in `tests/golden/`. This is an evaluation harness, not a pass/fail gate. Results are documented honestly — failures are evidence of model limitations, not blockers.
 - **Golden test scoring** — each golden Q&A is evaluated on three dimensions:
   1. **Concept correctness** — the answer accurately describes the ISTQB concept being asked about.
@@ -325,7 +325,7 @@ Prompt size safeguard:
 
 Unit test scope for Step 9 (`tests/unit/test_qa_expert.py`):
 - `test_answer_returns_abstain_when_top_score_below_threshold`
-- `test_answer_returns_no_context_when_retrieval_empty`
+- `test_answer_returns_abstain_when_retrieval_empty`
 - `test_answer_calls_llm_when_top_score_above_threshold`
 - `test_answer_propagates_mimik_unavailable`
 

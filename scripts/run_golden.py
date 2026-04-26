@@ -1,4 +1,11 @@
-"""Standalone script: run the golden evaluation suite and write RESULTS.md."""
+"""Standalone script: run the golden evaluation suite and write RESULTS.md.
+
+NOTE: This script regenerates RESULTS.md on every run. The auto-generated
+Observations section is a one-liner summary. After running, if you want
+substantive analysis, manually rewrite the Observations section. The script
+backs up the existing file to RESULTS.md.backup if it detects a hand-crafted
+Observations section, so you can recover or merge the analysis.
+"""
 
 import json
 import sys
@@ -79,11 +86,14 @@ def main() -> None:
     lines.append("## Summary\n")
     lines.append("| Type | Total | Passed | Failed |")
     lines.append("|------|-------|--------|--------|")
+    istqb_failed = len(istqb_entries) - istqb_passed
+    abstain_failed = len(abstain_entries) - abstain_passed
     lines.append(
-        f"| ISTQB | {len(istqb_entries)} | {istqb_passed} | {len(istqb_entries) - istqb_passed} |"
+        f"| ISTQB | {len(istqb_entries)} | {istqb_passed} | {istqb_failed} |"
     )
+    n_abstain = len(abstain_entries)
     lines.append(
-        f"| Abstain trigger | {len(abstain_entries)} | {abstain_passed} | {len(abstain_entries) - abstain_passed} |"
+        f"| Abstain trigger | {n_abstain} | {abstain_passed} | {abstain_failed} |"
     )
     lines.append("")
 
@@ -122,7 +132,9 @@ def main() -> None:
             at_pass, at_details = result["abstain_trigger"]
             lines.append(f"Abstain trigger: {_fmt(at_pass)}")
             lines.append(f"  - matches_abstain: {at_details['matches_abstain']}")
-            lines.append(f"  - actual_first_50_chars: \"{at_details['actual_first_50_chars']}\"\n")
+            lines.append(
+                f'  - actual_first_50_chars: "{at_details["actual_first_50_chars"]}"\n'
+            )
 
         lines.append("---\n")
 
@@ -135,6 +147,19 @@ def main() -> None:
         f"Results reflect {settings.model_name} capabilities at evaluation time. "
         "Failures are evidence of model limitations, not implementation errors."
     )
+
+    if _RESULTS_PATH.exists():
+        existing = _RESULTS_PATH.read_text()
+        if (
+            "## Observations\n\nOverall pass rate:" in existing
+            and "### Abstain logic works as designed" in existing
+        ):
+            backup_path = _RESULTS_PATH.with_suffix(".md.backup")
+            backup_path.write_text(existing)
+            print(
+                f"Existing RESULTS.md has hand-crafted Observations — "
+                f"backed up to {backup_path}"
+            )
 
     _RESULTS_PATH.write_text("\n".join(lines) + "\n")
     print(f"\nResults written to {_RESULTS_PATH}")
