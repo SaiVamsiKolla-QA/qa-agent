@@ -191,4 +191,51 @@ Abstain trigger: PASS
 
 ## Observations
 
-Overall pass rate: 3/10 (30%). Results reflect smollm2-360m capabilities at evaluation time. Failures are evidence of model limitations, not implementation errors.
+Overall pass rate: 3/10 (30%). All three passes came from abstain triggers; zero ISTQB questions passed all three scoring dimensions.
+
+### Abstain logic works as designed
+
+Three out of three unrelated questions (sourdough bread, Vancouver Canucks scores, Toronto QA salaries) correctly returned the abstain message without triggering an LLM call. Top similarity scores for these questions stayed well below the 0.35 threshold, confirming the threshold is calibrated correctly for "totally unrelated to ISTQB" content.
+
+### Terminology coverage versus concept correctness
+
+A clear pattern emerged across the 7 ISTQB questions:
+
+| Dimension | Pass rate |
+|-----------|-----------|
+| Terminology coverage | 6/7 |
+| Concept correctness | 0/7 |
+| Hallucination absence | 0/7 |
+
+`smollm2-360m` reliably reproduces the canonical topic name when it appears in the question (the term "metamorphic testing", "A/B testing", "test oracle", etc.) but consistently fails to produce the supporting concepts that define what the term actually means. This is the most damaging failure mode for a domain-specialized RAG system: confident answers that sound authoritative because they use the right vocabulary, but invent the underlying explanations.
+
+### Specific failure patterns
+
+**Q06 — Adversarial testing.** The model conflated adversarial testing with security testing, a related but distinct concept. The harness caught this via the `banned_phrases` check. Real adversarial testing in ML focuses on adversarial examples, perturbations, and model robustness — not penetration testing or vulnerability scanning.
+
+**Q04 — ML model validation.** The malformed question grammar ("How to validation the ML model?") dropped retrieval similarity below the 0.35 threshold, triggering the abstain message instead of an answer attempt. This suggests the embedding model (`all-MiniLM-L6-v2`) is sensitive to question phrasing quality. A grammatically correct version of the same question might have scored above threshold and produced an answer (likely also wrong, but visible).
+
+### Non-determinism
+
+Across multiple runs of the same questions during development, `smollm2-360m` produced materially different wrong answers each time. This is expected behavior for an LLM with default sampling, but worth noting: even repeated evaluation runs against the same model and corpus will produce varying RESULTS.md outputs. The pattern of failures is stable; the specific wrong content is not.
+
+### Implications for model upgrade
+
+The pass rate for ISTQB questions is bounded above by `smollm2-360m`'s capability to follow structured instructions and produce grounded technical content. A 3B+ instruct model (e.g., Qwen2.5-3B-Instruct, Phi-3.5-Mini) would likely improve concept correctness substantially because:
+
+1. Larger models follow multi-part format contracts more reliably (the five-part response structure is currently ignored).
+2. Larger models are less prone to topic-name hallucination — they're more likely to produce wrong-but-related content rather than confidently wrong content.
+3. The 32K context window of modern 3B models removes the `top_k=2` workaround, restoring full retrieval recall.
+
+The Step 10 baseline (3/10 pass rate) is the comparison point against which a future model upgrade can be measured. Re-running this same harness against a larger model is the correct next experiment.
+
+### What this evaluation does NOT measure
+
+Keyword-matching scoring is intentionally simple. It can detect "vocabulary right, concept wrong" (the dominant failure mode here), but cannot evaluate:
+
+- Subtle semantic drift where the answer is mostly right but mischaracterizes nuance
+- Citation accuracy beyond presence (does the cited page actually contain the cited claim?)
+- Coherence of multi-part structured answers
+- Practical usefulness of the suggested test cases
+
+A future LLM-as-judge approach could score these dimensions, with the tradeoff of introducing another LLM dependency in the evaluation loop.
