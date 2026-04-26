@@ -33,9 +33,10 @@ target-version = "py311"
 select = ["E", "F", "I"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/unit", "tests/integration"]
 markers = [
     "integration: marks tests as integration (deselect with '-m not integration')",
+    "golden: marks tests as golden RAG evaluation (run with 'pytest tests/golden/')",
 ]
 
 [build-system]

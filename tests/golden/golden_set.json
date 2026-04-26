@@ -1,0 +1,17 @@
+[
+  {
+    "id": "q01",
+    "type": "istqb",
+    "question": "What is metamorphic testing?",
+    "expected_keywords": ["metamorphic relation", "transformation", "oracle"],
+    "canonical_terms": ["metamorphic testing"],
+    "banned_phrases": ["performance testing", "load testing"],
+    "expected_topics": ["AI testing"],
+    "source_pages": [68, 72]
+  },
+  {
+    "id": "q02",
+    "type": "abstain_trigger",
+    "question": "What's the salary for a QA engineer in Toronto?"
+  }
+]
