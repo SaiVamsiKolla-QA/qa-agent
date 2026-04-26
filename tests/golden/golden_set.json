@@ -2,16 +2,86 @@
   {
     "id": "q01",
     "type": "istqb",
-    "question": "What is metamorphic testing?",
-    "expected_keywords": ["metamorphic relation", "transformation", "oracle"],
+    "question": "What is metamorphic testing, explain in simple way?",
+    "expected_keywords": ["metamorphic relation", "transformation", "oracle", "invariant"],
     "canonical_terms": ["metamorphic testing"],
-    "banned_phrases": ["performance testing", "load testing"],
-    "expected_topics": ["AI testing"],
+    "banned_phrases": ["performance testing", "load testing", "stress testing", "continuous testing"],
+    "expected_topics": ["AI testing", "test oracle", "machine learning"],
     "source_pages": [68, 72]
   },
   {
     "id": "q02",
+    "type": "istqb",
+    "question": "How to do A/B testing for AI/ML systems?",
+    "expected_keywords": ["control group", "variant", "treatment", "statistical significance", "hypothesis"],
+    "canonical_terms": ["A/B testing"],
+    "banned_phrases": ["unit testing", "regression testing", "integration testing"],
+    "expected_topics": ["experimental design", "machine learning", "model comparison"],
+    "source_pages": [54, 56]
+  },
+  {
+    "id": "q03",
+    "type": "istqb",
+    "question": "What is Test oracle problem?",
+    "expected_keywords": ["expected output", "correctness", "judgment", "ground truth"],
+    "canonical_terms": ["test oracle"],
+    "banned_phrases": ["test plan", "test strategy"],
+    "expected_topics": ["AI testing", "machine learning", "verification"],
+    "source_pages": [38, 39]
+  },
+  {
+    "id": "q04",
+    "type": "istqb",
+    "question": "How to validation the ML model?",
+    "expected_keywords": ["training", "test set", "validation set", "accuracy", "cross-validation"],
+    "canonical_terms": ["model validation"],
+    "banned_phrases": ["unit testing", "smoke testing"],
+    "expected_topics": ["machine learning", "model evaluation", "performance metrics"],
+    "source_pages": [42, 45]
+  },
+  {
+    "id": "q05",
+    "type": "istqb",
+    "question": "What is Bias and fairness in context of while testing AI systems?",
+    "expected_keywords": ["bias", "fairness", "protected attributes", "discrimination", "demographic"],
+    "canonical_terms": ["bias", "fairness"],
+    "banned_phrases": ["test bias", "selection bias in testing"],
+    "expected_topics": ["AI ethics", "machine learning", "responsible AI"],
+    "source_pages": [82, 85]
+  },
+  {
+    "id": "q06",
+    "type": "istqb",
+    "question": "What is Adversarial testing?",
+    "expected_keywords": ["adversarial example", "perturbation", "robustness", "attack"],
+    "canonical_terms": ["adversarial testing"],
+    "banned_phrases": ["penetration testing", "security testing"],
+    "expected_topics": ["AI security", "robustness", "machine learning"],
+    "source_pages": [90, 93]
+  },
+  {
+    "id": "q07",
+    "type": "istqb",
+    "question": "What is Concept drift testing?",
+    "expected_keywords": ["data distribution", "drift", "model degradation", "monitoring", "retraining"],
+    "canonical_terms": ["concept drift"],
+    "banned_phrases": ["scope creep", "feature drift"],
+    "expected_topics": ["model monitoring", "machine learning", "production"],
+    "source_pages": [76, 78]
+  },
+  {
+    "id": "q08",
     "type": "abstain_trigger",
-    "question": "What's the salary for a QA engineer in Toronto?"
+    "question": "How do I bake sourdough bread?"
+  },
+  {
+    "id": "q09",
+    "type": "abstain_trigger",
+    "question": "What were last night's Vancouver Canucks scores?"
+  },
+  {
+    "id": "q10",
+    "type": "abstain_trigger",
+    "question": "What's the recommended salary for a QA engineer in Toronto?"
   }
 ]
