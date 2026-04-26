@@ -10,7 +10,7 @@ so the empty-query test asserts [] rather than catching an exception.
 import pytest
 
 import qa_agent.vector_store as _vs
-from qa_agent.vector_store import add_chunks, collection_count, query
+from qa_agent.vector_store import add_chunks, collection_count, query, reset_collection
 
 
 def _make_chunks(texts: list[str], source_doc: str = "test.pdf") -> list[dict]:
@@ -164,3 +164,35 @@ def test_vector_store_query_scores_are_in_valid_cosine_range() -> None:
     assert len(results) == 1
     score = results[0]["score"]
     assert 0.0 <= score <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# reset_collection
+# ---------------------------------------------------------------------------
+
+
+def test_vector_store_reset_collection_swallows_not_found_error(
+    tmp_path, monkeypatch
+) -> None:
+    """First-run reset (collection does not exist yet) must not raise."""
+    monkeypatch.setattr(_vs.settings, "chroma_path", str(tmp_path / "chroma"))
+    monkeypatch.setattr(_vs, "_client", None)
+
+    reset_collection()
+
+    assert _vs.collection_count() == 0
+
+
+def test_vector_store_reset_collection_reraises_unexpected_exception(
+    monkeypatch,
+) -> None:
+    """Non-NotFoundError from delete_collection must propagate, not be swallowed."""
+
+    class FakeClient:
+        def delete_collection(self, *_) -> None:
+            raise ValueError("simulated unexpected failure")
+
+    monkeypatch.setattr(_vs, "_client", FakeClient())
+
+    with pytest.raises(ValueError, match="simulated unexpected failure"):
+        reset_collection()

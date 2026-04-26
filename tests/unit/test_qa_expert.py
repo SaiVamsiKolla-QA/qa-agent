@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -118,3 +119,42 @@ def test_answer_propagates_mimik_unavailable(stub_prompts_dir):
 
         with pytest.raises(MimikUnavailableError):
             qa_expert.answer("What is metamorphic testing?")
+
+
+def test_answer_emits_warning_when_prompt_exceeds_word_threshold(
+    stub_prompts_dir, caplog
+):
+    """Prompt word count over 1500 emits a WARNING with prompt_words= and
+    exceeds_threshold=True before the LLM call."""
+    assert (stub_prompts_dir / "qa_expert.txt").exists()
+    # stub system prompt is 5 words; need hit text large enough to push
+    # combined total above 1500. 1500 words gives ~1519 combined.
+    large_text = " ".join(["word"] * 1500)
+    large_hit = {
+        "text": large_text,
+        "score": 0.62,
+        "source_doc": "test.pdf",
+        "page": 1,
+        "chunk_index": 0,
+        "chunk_id": "large123",
+    }
+
+    with (
+        patch("qa_agent.agents.qa_expert.vector_store.query") as mock_query,
+        patch("qa_agent.agents.qa_expert.llm_client.chat") as mock_chat,
+    ):
+        mock_query.return_value = [large_hit]
+        mock_chat.return_value = "answer"
+
+        with caplog.at_level(logging.WARNING, logger="qa_agent.agents.qa_expert"):
+            qa_expert.answer("What is metamorphic testing?")
+
+    warning_records = [
+        r
+        for r in caplog.records
+        if r.levelno == logging.WARNING and "prompt_words" in r.message
+    ]
+    assert len(warning_records) == 1, (
+        f"Expected exactly one prompt_words warning, got {len(warning_records)}"
+    )
+    assert "exceeds_threshold=True" in warning_records[0].message

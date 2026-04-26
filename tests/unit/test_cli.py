@@ -37,3 +37,20 @@ def test_cmd_ask_calls_qa_expert_and_prints_result(
         _cmd_ask(args)
     assert "test answer" in capsys.readouterr().out
     mock_answer.assert_called_once_with(args.question)
+
+
+def test_cmd_ask_exits_with_error_on_mimik_unavailable(
+    capsys: pytest.CaptureFixture,
+) -> None:
+    """_cmd_ask handles MimikUnavailableError consistently with _cmd_ping."""
+    args = argparse.Namespace(question="What is metamorphic testing?")
+    with patch(
+        "qa_agent.cli.qa_expert.answer",
+        side_effect=MimikUnavailableError("test ask failure"),
+    ):
+        with pytest.raises(SystemExit) as exc_info:
+            _cmd_ask(args)
+    assert exc_info.value.code == 1
+    stderr = capsys.readouterr().err
+    assert "Error: mimik is not reachable" in stderr
+    assert "test ask failure" in stderr
