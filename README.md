@@ -65,17 +65,9 @@ This repository demonstrates skills in:
 
 ## What the Agent Does
 
-### Currently working (Steps 1–8b)
+The QA Expert Agent behaves like a Senior QA Engineer with 15+ years of experience mentoring a junior tester. Ask a question, and the system searches the vector store, retrieves the most relevant ISTQB chunks, and passes them to a local LLM to generate a structured answer.
 
-The ingestion pipeline loads ISTQB PDFs, splits them into overlapping chunks, generates embeddings with `sentence-transformers/all-MiniLM-L6-v2`, and stores them in ChromaDB with provenance metadata (source document, page number, chunk index, stable chunk ID). The vector store can be queried semantically via the Python API.
-
-Run `qa-agent ingest <pdf>` to load a document. The collection is replaced on each ingest run.
-
-### In development (Step 9)
-
-The QA Expert Agent will behave like a Senior QA Engineer with 15+ years of experience mentoring a junior tester. When you ask a question, the system will search the vector store, retrieve the most relevant chunks, and pass them to a local LLM to generate a structured answer.
-
-**Planned response format (5-part model):**
+**Response format (5-part model):**
 
 - **Definition** — ISTQB concept explanation
 - **Real project example** — practical usage
@@ -83,7 +75,11 @@ The QA Expert Agent will behave like a Senior QA Engineer with 15+ years of expe
 - **Common mistakes** — pitfalls
 - **Interview explanation** — how to explain in interviews
 
-The agent will cite retrieved chunks and abstain from answering when retrieval evidence is too weak.
+The agent cites retrieved chunks with inline `[page N]` markers and a References block. It abstains when retrieval evidence is too weak (similarity score below threshold) rather than hallucinating.
+
+Run `qa-agent ingest <pdf>` to load a document, then `qa-agent ask "<question>"` to query it.
+
+**Known limitation:** The current model (`smollm2-360m`, 360M params) is too small for reliable structured output. Answers may not consistently follow the five-part format or citation rules. The Step 10 golden test suite documents this with measurements. A future model upgrade to a 3B+ instruct model would significantly improve answer quality.
 
 ---
 
@@ -241,7 +237,9 @@ poetry run qa-agent ingest data/istqb_docs/<filename>.pdf
 
 ### Ask Questions
 
-Step 9 will add a `qa-agent ask` command for grounded QA answers — currently in development.
+```bash
+poetry run qa-agent ask "What is metamorphic testing?"
+```
 
 ---
 
@@ -261,7 +259,11 @@ poetry run pytest -m integration
 
 ### Golden RAG Tests
 
-Step 10 will add a golden test suite at `tests/golden/` with ≥10 Q&A pairs evaluating concept correctness, ISTQB terminology coverage, and absence of hallucinations.
+```bash
+poetry run pytest tests/golden/ -v
+```
+
+Evaluates ≥10 ISTQB Q&A pairs on concept correctness, terminology coverage, and hallucination absence. Results are informative — the current model (`smollm2-360m`) is too small for reliable structured output, and pass rate will reflect that honestly.
 
 ---
 
@@ -275,12 +277,9 @@ The goal is to understand how RAG systems work internally — not to wrap a fram
 
 ## Roadmap
 
-| Phase | Status  | Description                              |
-|-------|---------|------------------------------------------|
-| 1     | Current | CLI ingest pipeline with provenance metadata (Steps 1–8b complete; Steps 9–10 in progress) |
-| 2     | Planned | Test case generator agent (BVA, EP, decision tables) |
-| 3     | Planned | QA interview coach with answer evaluation |
-| 4     | Planned | FastAPI service + optional web UI        |
+| Phase | Status        | Description                              |
+|-------|---------------|------------------------------------------|
+| 1     | Final         | QA Expert Agent — full RAG pipeline with grounded answers, citation enforcement, abstain on weak evidence (Steps 1–9 complete; Step 10 golden evaluation in progress) |
 
 ---
 

@@ -6,24 +6,27 @@ Instructions for Claude Code when working in this repo. Read this before making 
 Build a local QA Expert Agent that reads ISTQB certification material and behaves like a Senior QA mentor. This is a **learning project** — the goal is to practice Python, end-to-end RAG, and agentic patterns built from primitives. Runs fully on mimik AI Foundation to dogfood the runtime while learning the mechanics underneath.
 
 ## Current Status
-**Phase 1, Step 9 next: QA Expert agent + ask subcommand.**
+**Steps 1–9 complete. Step 10 (golden test suite) remaining.**
 
-Steps 1–8b are complete and committed:
+All implementation steps are complete and committed:
 - Steps 1–2: `pyproject.toml`, `config.py`, and their tests — confirmed passing.
-- Step 3: `cli.py` (ping subcommand) + `llm_client.py` + `test_llm_client.py` — mimik auth wired through config; `poetry run qa-agent ping` confirmed working against real mimik.
+- Step 3: `cli.py` (ping subcommand) + `llm_client.py` + `test_llm_client.py` — mimik auth wired through config.
 - Step 4: `pdf_loader.py` + `test_pdf_loader.py` — 8 tests pass.
 - Step 5: `chunker.py` + `test_chunker.py` — 12 tests pass.
 - Step 6: `embeddings.py` + `test_embeddings.py` — 6 tests pass (real all-MiniLM-L6-v2, no mocking).
 - Step 7: `vector_store.py` + `tests/unit/test_vector_store.py` — 9 tests pass (real ChromaDB, tmp_path-backed).
 - Step 8: `ingest` subcommand in `cli.py` + `tests/integration/test_ingest.py` — 2 integration tests pass.
 - Step 8b: provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) added to chunks and stored in ChromaDB.
-- 44 tests pass (42 unit + 2 integration). Lint clean (`ruff check .`).
+- Step 9: `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand in `cli.py` + `tests/unit/test_qa_expert.py` — 4 unit tests pass. `qa-agent ask` returns grounded answers with abstain logic.
+- 48 tests pass (46 unit + 2 integration). Lint clean (`ruff check .`).
 - mimOE serves `smollm2-360m` on `localhost:8083`.
-- ChromaDB holds 88 chunks of ISTQB CT-AI syllabus with full provenance metadata.
+- ChromaDB holds 68 chunks of ISTQB CT-AI syllabus with full provenance metadata.
 
-Remaining Phase 1 steps: Step 9 (ask flow with four Codex safeguards) and Step 10 (golden suite, ≥10 questions).
+Remaining: Step 10 — implement golden test harness (≥10 Q&A pairs), run it, document results honestly.
 
-*Update this section whenever the step or phase changes. Current status drives what Claude Code should and should not work on.*
+**Known limitation:** `smollm2-360m` (360M params) is too small for reliable structured output. Step 10 results will reflect this. See Known Limitations section below.
+
+*Update this section whenever the step changes. Current status drives what Claude Code should and should not work on.*
 
 ## Project Context
 Solo-built by a Senior QA Engineer transitioning toward SDET and eventually ML engineering. Under 30 minutes of study time per weekday. Python experience is early-stage — optimize for learnable and legible, not clever. This repo doubles as a portfolio piece demonstrating agentic QA tooling on mimik. Because time is tight, scope discipline and review discipline matter more than feature ambition.
@@ -189,8 +192,8 @@ Do not log PDF content or full answers at INFO level — use DEBUG. Never log `.
 - **Unit tests** for every module in `qa_agent/`. A module is not considered complete without tests.
 - **Mock the mimik endpoint** in unit tests — do not hit real mimik in standard test runs.
 - **Integration tests** hit real mimik, live in `tests/integration/`, and are skipped by default (`@pytest.mark.integration`).
-- **RAG quality suite** — a golden set of ≥10 ISTQB Q&A pairs lives in `tests/golden/`. Passing this suite is the exit criterion for Phase 1.
-- **Golden test scoring** — each golden Q&A is evaluated on three dimensions, all of which must pass:
+- **RAG quality suite** — a golden set of ≥10 ISTQB Q&A pairs lives in `tests/golden/`. This is an evaluation harness, not a pass/fail gate. Results are documented honestly — failures are evidence of model limitations, not blockers.
+- **Golden test scoring** — each golden Q&A is evaluated on three dimensions:
   1. **Concept correctness** — the answer accurately describes the ISTQB concept being asked about.
   2. **Terminology coverage** — the answer uses correct canonical ISTQB vocabulary.
   3. **Hallucination absence** — every factual claim in the answer traces to a retrieved chunk, or is explicitly flagged as uncertain.
@@ -216,7 +219,7 @@ A step, feature, or phase is **done** only when all of these are true:
 - The step's exit test has been run by the user and produced the expected output.
 - For phase transitions: the phase's exit criterion is met (see roadmap below).
 
-**Phase 1 exit criterion:** ≥10 ISTQB questions from the golden set pass all three scoring dimensions (concept correctness, terminology coverage, hallucination absence).
+**Project exit criterion:** Step 10 golden test harness implemented and executed. Results documented in TODO.md or RESULTS.md — pass rate is informative, not gating. Project is complete when the harness works and results are published.
 
 ## Security
 - `.env` is gitignored. `.env.example` is committed with keys but no values.
@@ -236,12 +239,12 @@ A step, feature, or phase is **done** only when all of these are true:
 - **Not production software.** No SLAs, no availability targets, no multi-user concerns.
 - **Not a LangChain or LlamaIndex wrapper.** The point is to build RAG from primitives in order to learn how it works.
 - **Not a cloud-hosted service.** Local-only is a hard constraint.
-- **Not a multi-agent system yet.** One agent in Phase 1. A second agent only after Phase 1 exit criteria are met.
+- **Not a multi-agent system.** One agent. Additional agents are future possibilities, not planned work.
 - **Not a general-purpose QA tool.** Scoped strictly to ISTQB mentor behavior.
 - **Not a chatbot with memory.** Stateless Q&A in Phase 1; conversation memory is a later, explicit decision.
 
-## Non-Goals (Phase 1)
-To protect learning scope, the following are explicitly out of scope for Phase 1. Some will be revisited in later phases; some may never be built.
+## Non-Goals
+The following are out of scope for this project. See "Future Possibilities" at the end of this file for things that could be revisited in a follow-on project.
 
 - Conversation memory / multi-turn chat
 - Multi-agent orchestration
@@ -253,17 +256,11 @@ To protect learning scope, the following are explicitly out of scope for Phase 1
 - Hybrid search (dense + sparse / BM25)
 - PDF ingestion UI or file upload
 
-*Distinction from "What This Project Is NOT":* that section is permanent project identity. This section is phase-scoped and will be revised at phase transitions.
-
 ---
 
-## Phased Roadmap
-Each phase must fully meet the Quality Gate before the next one begins.
+## Project Roadmap
 
-1. **Phase 1 (current):** Single-agent RAG. Ingest → chunk → embed → ChromaDB → CLI Q&A.
-2. **Phase 2:** Test Case Generator agent. BVA, EP, decision tables, pairwise.
-3. **Phase 3:** Interview Coach agent. Generates questions, scores answers, suggests improvements.
-4. **Phase 4:** FastAPI wrapper over all three agents. Minimal web UI optional.
+**Phase 1 (current and final):** Single-agent RAG. Ingest → chunk → embed → ChromaDB → CLI Q&A with grounded answers, abstain logic, and citation enforcement. Step 10 (golden evaluation suite) is the final deliverable.
 
 ## Phase 1 Step Map
 Phase 1 is executed as ten primary steps plus one mid-course addition (Step 8b). Each step is one Claude Code session, one deliverable, one review checkpoint. Do not start step N+1 until step N's exit test has been run and confirmed by the user.
@@ -280,7 +277,7 @@ Phase 1 is executed as ten primary steps plus one mid-course addition (Step 8b).
 | 8 | `ingest` subcommand in `cli.py` + `tests/integration/test_ingest.py` | `qa-agent ingest <pdf>` runs end-to-end with full INFO logs |
 | 8b | Provenance metadata (`source_doc`, `page`, `chunk_index`, `chunk_id`) in chunks and ChromaDB | all 44 tests pass; `qa-agent ingest` stores metadata per chunk |
 | 9 | `agents/qa_expert.py`, `prompts/qa_expert.txt`, `ask` subcommand | `qa-agent ask "<question>"` returns a grounded answer |
-| 10 | `tests/golden/test_rag_quality.py` with ≥10 Q&A pairs | golden suite passes. **Phase 1 complete.** |
+| 10 | `tests/golden/test_rag_quality.py` with ≥10 Q&A pairs | harness runs end-to-end; results documented. **Project complete.** |
 
 ### Step 9 design decisions
 
@@ -332,4 +329,22 @@ Unit test scope for Step 9 (`tests/unit/test_qa_expert.py`):
 - `test_answer_calls_llm_when_top_score_above_threshold`
 - `test_answer_propagates_mimik_unavailable`
 
-All four tests use mocked `vector_store.query` and `llm_client.chat`. Behavioral quality of real answers is validated by the Step 10 golden suite, not Step 9 unit tests.
+All four tests use mocked `vector_store.query` and `llm_client.chat`. Behavioral quality of real answers is evaluated by the Step 10 golden suite, not Step 9 unit tests.
+
+## Known Limitations
+
+These are documented facts about the current system, not bugs to fix before shipping.
+
+- **Model too small for reliable structured output.** `smollm2-360m` (360M params) cannot reliably follow the five-part format contract or inline citation rules. Step 9 smoke test confirmed the model produced incorrect content (described continuous performance testing instead of metamorphic testing) even when the correct chunk was retrieved.
+- **Context window constraint.** smollm2-360m has ~2K token context. Four 500-word chunks plus system prompt plus question exceeded this limit, causing `llama_decode()` failure. `top_k` is temporarily reduced to 2 as a workaround.
+- **Word-based chunking.** `chunker.py` splits on words, not tokens. `chunk_size=500` produces chunks of inconsistent token length. A token-accurate chunker would require `tiktoken` or similar.
+- **Step 10 golden results will reflect model limitations.** This is intentional — the golden suite is an honest evaluation, not a quality gate. Results are published as evidence.
+
+## Future Possibilities
+
+These are design ideas preserved from the original roadmap. None are planned; all would require a new project or a deliberate Phase 2 decision.
+
+- **Test Case Generator agent** — given a feature description, generate BVA, equivalence partitioning, decision table, and pairwise test cases.
+- **Interview Coach agent** — generates ISTQB interview questions, scores answers, suggests improvements.
+- **FastAPI service** — wrap agents behind an HTTP API with a minimal web UI.
+- **Model upgrade** — replace `smollm2-360m` with `Qwen2.5-3B-Instruct` or similar 3B+ model via mimOE. Would unlock reliable structured output, restore `top_k=4`, and meaningfully improve golden suite scores.

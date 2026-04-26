@@ -10,9 +10,9 @@ Known gaps flagged during audit. Fix these before Phase 1 exit criteria are eval
 - [ ] `config.py` field `embed_batch_size` must be verified against the key name used in `.env.example` when that file is created — confirm the env var is `EMBED_BATCH_SIZE` and matches pydantic-settings' automatic name resolution.
 
 ## Post-Step-3
-- [ ] `smollm2-360m` (360M params) is too small for serious ISTQB Q&A.
-      Before Phase 1 Step 10 (golden suite), switch to a 3B or 7B
-      instruct model. Update `MODEL_NAME` in `.env` accordingly.
+- [x] `smollm2-360m` (360M params) is too small for serious ISTQB Q&A.
+      Model upgrade deferred — documented in Post-Phase-1 future work.
+      Step 10 golden suite will document current quality as baseline.
 - [x] CLAUDE.md references env var `MIMIK_BASE_URL` in at least one
       place but the code uses `MIMIK_ENDPOINT`. Reconcile naming so
       CLAUDE.md matches `config.py`. (resolved: CLAUDE.md no longer
@@ -88,9 +88,9 @@ Four safeguards to fold into Step 9's ask flow:
       return "I don't have enough information from the available
       documents" instead of calling the LLM
       (addressed in Step 9 design decisions)
-- [ ] Token count check — design specified in CLAUDE.md Step 9 design
-      decisions section (1500-word threshold, WARNING log, module
-      constant in qa_expert.py). Implementation pending in Step 9.
+- [x] Token count check — 1500-word threshold WARNING log implemented
+      in qa_expert.py as _PROMPT_WORD_WARN_THRESHOLD module constant.
+      (shipped in Step 9, commit 491de35)
 
 - [ ] Library output noise (partial fix attempted twice, reverted both times):
       sentence_transformers / huggingface_hub / transformers print
@@ -120,9 +120,26 @@ Four safeguards to fold into Step 9's ask flow:
       to 4 (or higher).
 
 ## Step 10 scope note
-Minimum 10 golden questions (up from 5), drawn from CT-AI syllabus
-content since that's what's in the corpus. Classical ISTQB questions
-(equivalence partitioning, boundary values, decision tables) need
-CTFL syllabus ingested first — defer to Phase 2 unless adding it
-is trivial.
+Step 10 produces a golden test harness of ≥10 ISTQB Q&A pairs drawn
+from the CT-AI syllabus (currently ingested corpus). Tests evaluate
+concept correctness, terminology coverage, and hallucination absence.
+Results are documented honestly in TODO.md or RESULTS.md — failures
+are evidence of model limitations, not blockers. Project is complete
+when the harness is implemented and results are published.
+
+Classical ISTQB questions (equivalence partitioning, boundary values,
+decision tables) require CTFL syllabus — defer unless adding it is
+trivial.
+
+## Post-Phase-1 future work
+- [ ] Model upgrade: replace smollm2-360m with Qwen2.5-3B-Instruct
+      or similar 3B+ instruct model via mimOE. This is the primary
+      quality lever — reliable five-part structured output and
+      accurate citations require a larger model. Procedure to be
+      documented based on work environment knowledge.
+- [ ] Restore top_k=4 (or higher) after model upgrade. Current
+      top_k=2 is a context-window workaround for smollm2-360m.
+      See Post-Step-9 item above.
+- [ ] Re-run golden suite after model upgrade to measure quality
+      improvement against the Step 10 baseline results.
 
