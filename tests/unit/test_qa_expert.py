@@ -61,6 +61,27 @@ def test_answer_returns_abstain_when_retrieval_empty(stub_prompts_dir):
     mock_chat.assert_not_called()
 
 
+def test_answer_calls_llm_when_top_score_equals_threshold(stub_prompts_dir):
+    """Score exactly equal to threshold should NOT abstain (uses strict <)."""
+    with patch("qa_agent.agents.qa_expert.vector_store.query") as mock_query, \
+         patch("qa_agent.agents.qa_expert.llm_client.chat") as mock_chat:
+        hit_at_threshold = {
+            "text": "Some content.",
+            "score": 0.35,
+            "source_doc": "test.pdf",
+            "page": 1,
+            "chunk_index": 0,
+            "chunk_id": "boundary123",
+        }
+        mock_query.return_value = [hit_at_threshold]
+        mock_chat.return_value = "test answer"
+
+        result = qa_expert.answer("What is metamorphic testing?")
+
+    assert result == "test answer"
+    mock_chat.assert_called_once()
+
+
 def test_answer_calls_llm_when_top_score_above_threshold(stub_prompts_dir):
     """Above-threshold score calls LLM with correctly structured prompt args."""
     with patch("qa_agent.agents.qa_expert.vector_store.query") as mock_query, \
