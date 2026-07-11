@@ -242,9 +242,7 @@ def test_build_user_message_preserves_hit_rank_order():
     assert "chunk_id: chunk2" in block_3
 
 
-def test_answer_does_not_warn_when_prompt_below_threshold(
-    stub_prompts_dir, caplog
-):
+def test_answer_does_not_warn_when_prompt_below_threshold(stub_prompts_dir, caplog):
     """Prompt below 1500 words must NOT emit a prompt_words WARNING."""
     assert (stub_prompts_dir / "qa_expert.txt").exists()
     small_hit = {

@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * *" # nightly evals
+  workflow_dispatch:
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+      - name: Ruff lint
+        run: poetry run ruff check .
+      - name: Ruff format
+        run: poetry run ruff format --check .
+      - name: Unit + integration tests
+        # Mocked mimik for unit; real ChromaDB + real embeddings (CPU) for
+        # integration — no LLM runtime needed.
+        run: poetry run pytest
+
+  evals:
+    # CPU-only eval gate. Today this exercises the schema layer; the live
+    # layer skips because mimik does not run on CI. When a CI-hostable
+    # local model replaces mimik here, drop the comment on the env line.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies (with evals group)
+        run: |
+          pip install poetry
+          poetry install --with evals
+      - name: Run eval gate
+        # env:
+        #   MIMIK_BASE_URL: http://localhost:8083  # once a CI-side runtime exists
+        run: poetry run pytest evals/ -m eval_gate -v

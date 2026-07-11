@@ -1,6 +1,11 @@
 # Environment / secrets
 .env
 .env.local
+.claude/
+
+# Eval tool state
+.deepeval/
+.deepeval_telemetry.txt
 
 # Python build and cache
 __pycache__/

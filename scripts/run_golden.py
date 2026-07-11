@@ -88,9 +88,7 @@ def main() -> None:
     lines.append("|------|-------|--------|--------|")
     istqb_failed = len(istqb_entries) - istqb_passed
     abstain_failed = len(abstain_entries) - abstain_passed
-    lines.append(
-        f"| ISTQB | {len(istqb_entries)} | {istqb_passed} | {istqb_failed} |"
-    )
+    lines.append(f"| ISTQB | {len(istqb_entries)} | {istqb_passed} | {istqb_failed} |")
     n_abstain = len(abstain_entries)
     lines.append(
         f"| Abstain trigger | {n_abstain} | {abstain_passed} | {abstain_failed} |"
