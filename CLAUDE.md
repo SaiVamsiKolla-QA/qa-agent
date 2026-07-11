@@ -198,6 +198,16 @@ Do not log PDF content or full answers at INFO level — use DEBUG. Never log `.
   2. **Terminology coverage** — the answer uses correct canonical ISTQB vocabulary.
   3. **Hallucination absence** — every factual claim in the answer traces to a retrieved chunk, or is explicitly flagged as uncertain.
 - Test naming: `test_<module>_<behavior>_<expected>`, e.g. `test_chunker_long_text_splits_with_overlap`.
+- **Eval gate** — `evals/` holds threshold-gated DeepEval cases (marker: `eval_gate`). Unlike the golden suite, these are meant to fail builds once thresholds are calibrated. Metrics are deterministic and judge-free (local-only rule). See `evals/README.md`.
+
+## CI/CD Workflows
+
+Full reference (job table, local-repro commands, debugging): [docs/ci.md](docs/ci.md).
+
+- PR gate (`test` job): `ruff check` → `ruff format --check` → `pytest` (unit + integration; no mimik needed).
+- Nightly (`evals` job, 05:00 UTC cron + dispatch): `pytest evals/ -m eval_gate` on CPU. Schema layer runs today; the live layer skips until a CI-hostable local runtime exists.
+- Reproduce every stage locally before pushing — exact commands in docs/ci.md.
+- Do not touch workflow triggers or the `require_mimik` skip convention (live evals skip, never fail, when mimik is down).
 
 ## Workflow Rules
 - Branch from `main`. Branch names: `feat/<short-desc>`, `fix/<short-desc>`, `chore/<short-desc>`, `docs/<short-desc>`.
