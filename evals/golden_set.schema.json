@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/SaiVamsiKolla-QA/qa-agent/blob/main/evals/golden_set.schema.json",
+  "title": "Golden eval case",
+  "description": "One RAG evaluation case. Field names match tests/golden/golden_set.json so existing cases can migrate; `thresholds` is the addition that turns a case into a gate.",
+  "type": "object",
+  "required": [
+    "id",
+    "question",
+    "expected_keywords",
+    "canonical_terms",
+    "banned_phrases",
+    "thresholds"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^q[0-9]{2,}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["istqb"]
+    },
+    "question": {
+      "type": "string",
+      "minLength": 10
+    },
+    "expected_keywords": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "canonical_terms": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "banned_phrases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_topics": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "source_pages": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Gate levels for this case. Deliberately per-case: weak questions get honest thresholds instead of dragging the global bar down.",
+      "required": ["keyword_coverage"],
+      "properties": {
+        "keyword_coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "banned_phrase_max": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

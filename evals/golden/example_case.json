@@ -1,0 +1,24 @@
+{
+  "id": "q01",
+  "type": "istqb",
+  "question": "What is metamorphic testing, explain in simple way?",
+  "expected_keywords": [
+    "metamorphic relation",
+    "transformation",
+    "oracle",
+    "invariant"
+  ],
+  "canonical_terms": ["metamorphic testing"],
+  "banned_phrases": [
+    "performance testing",
+    "load testing",
+    "stress testing",
+    "continuous testing"
+  ],
+  "expected_topics": ["AI testing", "test oracle", "machine learning"],
+  "source_pages": [68, 72],
+  "thresholds": {
+    "keyword_coverage": 0.25,
+    "banned_phrase_max": 0
+  }
+}
