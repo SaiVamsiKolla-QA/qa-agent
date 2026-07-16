@@ -8,6 +8,8 @@ This project is intentionally built from primitives (without LangChain or orches
 
 The system runs fully locally using mimik AI Foundation with models served via the mimoe runtime.
 
+Part of my SDET portfolio → [saivamsikolla-qa.github.io](https://saivamsikolla-qa.github.io/)
+
 ---
 
 ## ⚠️ AI Development Rules
