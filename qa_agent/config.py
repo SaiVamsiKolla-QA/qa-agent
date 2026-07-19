@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     embed_batch_size: int = 32
     hnsw_space: str = "cosine"
     llm_timeout: int = 30
+    llm_temperature: float | None = None
+    llm_seed: int | None = None
+    llm_max_tokens: int | None = None
     prompts_dir: Path = Path(__file__).parent / "prompts"
 
 
