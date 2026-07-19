@@ -25,3 +25,12 @@ def test_settings_default_top_k() -> None:
 def test_settings_default_embed_batch_size() -> None:
     s = Settings(_env_file=None)
     assert s.embed_batch_size == 32
+
+
+def test_settings_generation_params_default_to_none() -> None:
+    """Unset generation params mean 'omit from the request' — historical
+    behavior preserved."""
+    s = Settings(_env_file=None)
+    assert s.llm_temperature is None
+    assert s.llm_seed is None
+    assert s.llm_max_tokens is None

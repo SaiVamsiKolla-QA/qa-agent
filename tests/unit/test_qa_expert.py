@@ -50,7 +50,11 @@ def test_answer_returns_abstain_when_top_score_below_threshold(stub_prompts_dir)
         ]
         result = qa_expert.answer("What is metamorphic testing?")
 
-    assert result == ABSTAIN_MESSAGE
+    assert result.answer == ABSTAIN_MESSAGE
+    assert result.abstained is True
+    assert result.system_prompt is None
+    assert result.user_message is None
+    assert result.latency_s >= 0
     mock_chat.assert_not_called()
 
 
@@ -63,7 +67,9 @@ def test_answer_returns_abstain_when_retrieval_empty(stub_prompts_dir):
         mock_query.return_value = []
         result = qa_expert.answer("What is metamorphic testing?")
 
-    assert result == ABSTAIN_MESSAGE
+    assert result.answer == ABSTAIN_MESSAGE
+    assert result.abstained is True
+    assert result.retrieved == []
     mock_chat.assert_not_called()
 
 
@@ -86,7 +92,8 @@ def test_answer_calls_llm_when_top_score_equals_threshold(stub_prompts_dir):
 
         result = qa_expert.answer("What is metamorphic testing?")
 
-    assert result == "test answer"
+    assert result.answer == "test answer"
+    assert result.abstained is False
     mock_chat.assert_called_once()
 
 
@@ -101,11 +108,16 @@ def test_answer_calls_llm_when_top_score_above_threshold(stub_prompts_dir):
 
         result = qa_expert.answer("What is metamorphic testing?")
 
-    assert result == "test answer"
+    assert result.answer == "test answer"
+    assert result.abstained is False
+    assert result.retrieved == [_ABOVE_THRESHOLD_HIT]
+    assert result.latency_s >= 0
     mock_chat.assert_called_once()
     _system_prompt, user_message = mock_chat.call_args.args
     assert "[1] Source:" in user_message
     assert "Question:" in user_message
+    assert result.system_prompt == _system_prompt
+    assert result.user_message == user_message
 
 
 def test_answer_propagates_mimik_unavailable(stub_prompts_dir):

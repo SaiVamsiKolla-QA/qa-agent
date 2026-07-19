@@ -69,7 +69,7 @@ def _cmd_ask(args: argparse.Namespace) -> None:
     """Handle the ask subcommand — answer an ISTQB question."""
     try:
         result = qa_expert.answer(args.question)
-        print(result)
+        print(result.answer)
     except MimikUnavailableError as exc:
         print(f"Error: mimik is not reachable. {exc}", file=sys.stderr)
         sys.exit(1)

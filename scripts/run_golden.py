@@ -30,7 +30,7 @@ _RESULTS_PATH = _REPO_ROOT / "RESULTS.md"
 
 
 def _run_istqb(entry: dict) -> dict:
-    answer = qa_expert.answer(entry["question"])
+    answer = qa_expert.answer(entry["question"]).answer
     cc_pass, cc_details = score_concept_correctness(answer, entry["expected_keywords"])
     tc_pass, tc_details = score_terminology_coverage(answer, entry["canonical_terms"])
     ha_pass, ha_details = score_hallucination_absence(
@@ -47,7 +47,7 @@ def _run_istqb(entry: dict) -> dict:
 
 
 def _run_abstain(entry: dict) -> dict:
-    answer = qa_expert.answer(entry["question"])
+    answer = qa_expert.answer(entry["question"]).answer
     passed, details = score_abstain_trigger(answer)
     return {"answer": answer, "overall": passed, "abstain_trigger": (passed, details)}
 

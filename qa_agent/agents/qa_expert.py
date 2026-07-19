@@ -1,4 +1,6 @@
 import logging
+import time
+from dataclasses import dataclass
 
 from qa_agent import llm_client, vector_store
 from qa_agent.config import settings
@@ -11,25 +13,48 @@ ABSTAIN_MESSAGE = (
 _PROMPT_WORD_WARN_THRESHOLD = 1500
 
 
-def answer(question: str) -> str:
+@dataclass(frozen=True)
+class AgentResult:
+    """Full trace of one answer() invocation.
+
+    Carries everything evaluation needs alongside the answer text: the
+    retrieved chunks (with scores and provenance), whether the abstain
+    gate fired, the exact prompts sent, the model used, and latency.
+    On the abstain path no prompt is built and no LLM is called, so
+    system_prompt and user_message are None.
+    """
+
+    answer: str
+    retrieved: list[dict]
+    abstained: bool
+    system_prompt: str | None
+    user_message: str | None
+    model_name: str
+    latency_s: float
+
+
+def answer(question: str) -> AgentResult:
     """Answer an ISTQB question using retrieved context from the vector store.
 
     Retrieves the most relevant chunks from ChromaDB, checks whether the
     evidence is strong enough to warrant an LLM call, builds a numbered
-    context block prompt, and returns the LLM's grounded response.
+    context block prompt, and returns the LLM's grounded response wrapped
+    in an AgentResult trace.
 
     Args:
         question: The user's question string.
 
     Returns:
-        The LLM's answer as a plain string, or ABSTAIN_MESSAGE if
-        retrieval evidence is too weak or empty.
+        An AgentResult whose answer field holds the LLM's grounded
+        response, or ABSTAIN_MESSAGE (with abstained=True) if retrieval
+        evidence is too weak or empty.
 
     Raises:
         MimikUnavailableError: If mimik AI Foundation is unreachable.
         RuntimeError: If the LLM returns an empty response.
         FileNotFoundError: If qa_expert.txt is missing from prompts_dir.
     """
+    start = time.monotonic()
     logger.info(f"query_received length_chars={len(question)}")
 
     hits = vector_store.query(question, top_k=settings.top_k)
@@ -42,7 +67,15 @@ def answer(question: str) -> str:
         )
 
     if not hits or hits[0]["score"] < settings.abstain_threshold:
-        return ABSTAIN_MESSAGE
+        return AgentResult(
+            answer=ABSTAIN_MESSAGE,
+            retrieved=hits,
+            abstained=True,
+            system_prompt=None,
+            user_message=None,
+            model_name=settings.model_name,
+            latency_s=round(time.monotonic() - start, 3),
+        )
 
     system_prompt = (settings.prompts_dir / "qa_expert.txt").read_text()
     user_message = _build_user_message(hits, question)
@@ -51,7 +84,16 @@ def answer(question: str) -> str:
     if combined_words > _PROMPT_WORD_WARN_THRESHOLD:
         logger.warning(f"prompt_words={combined_words} exceeds_threshold=True")
 
-    return llm_client.chat(system_prompt, user_message)
+    reply = llm_client.chat(system_prompt, user_message)
+    return AgentResult(
+        answer=reply,
+        retrieved=hits,
+        abstained=False,
+        system_prompt=system_prompt,
+        user_message=user_message,
+        model_name=settings.model_name,
+        latency_s=round(time.monotonic() - start, 3),
+    )
 
 
 def _build_user_message(hits: list[dict], question: str) -> str:
