@@ -67,9 +67,9 @@ These are fixed. Do not substitute without explicit instruction.
 ### Forbidden Tools
 Do not add any of these without explicit approval in a PR description. This list exists to protect the learning goal — frameworks that hide RAG and agent mechanics are off-limits on purpose.
 
-- **Agent / RAG frameworks:** LangChain, LlamaIndex, LangGraph, CrewAI, AutoGen, Smol-agents, Haystack, or any other orchestration framework.
+- **Agent / RAG frameworks:** LangChain, LlamaIndex, LangGraph, CrewAI, AutoGen, Smol-agents, Haystack, or any other orchestration framework. *Allowed exception:* **DeepEval**, as an evaluation harness only — it measures the agent, it never orchestrates it. DeepEval lives in the `eval` dependency group and is imported only under `evaluation/` and its tests; `qa_agent/` never imports it. (DECISIONS.md ADR-001.)
 - **Web frameworks before Phase 4:** FastAPI, Flask, Django, Starlette. FastAPI becomes allowed only from Phase 4 onward.
-- **Cloud LLM endpoints:** OpenAI, Anthropic, Google, Mistral, Cohere. Local-only is a hard constraint. *Note:* using the OpenAI Python SDK pointed at localhost mimik is fine — the rule is about endpoints, not client libraries.
+- **Cloud LLM endpoints:** OpenAI, Anthropic, Google, Mistral, Cohere. Local-only is a hard constraint **for the runtime agent** (`qa_agent/`). *Scoped exception:* the **evaluation layer** (`evaluation/`) may call cloud LLM APIs as judge or candidate models — API keys come from environment variables only, are never committed, and are never required for the agent itself to run. *Note:* using the OpenAI Python SDK pointed at localhost mimik is fine — the rule is about endpoints, not client libraries.
 - **Heavyweight test runners:** no `unittest` boilerplate, no `nose`. `pytest` only.
 
 ## Architecture
@@ -107,7 +107,12 @@ qa-expert-agent/
 ├── tests/
 │   ├── unit/
 │   ├── integration/
-│   └── golden/                 # Step 10
+│   └── golden/                 # Step 10 (v1 keyword harness)
+├── evaluation/                 # DeepEval framework (see ARCHITECTURE.md Part 2)
+│   ├── datasets/               # golden dataset v2 + schema
+│   ├── runners/                # agent_runner, eval_runner
+│   ├── configs/                # eval.yaml (judge, thresholds)
+│   └── outputs/                # per-run artifacts (gitignored)
 ├── pyproject.toml
 ├── .env.example
 └── CLAUDE.md
@@ -227,7 +232,7 @@ A step, feature, or phase is **done** only when all of these are true:
 - `.env` is gitignored. `.env.example` is committed with keys but no values.
 - ISTQB PDFs are never committed. `data/istqb_docs/` is gitignored.
 - `chroma_db/` is never committed.
-- No cloud API keys anywhere in the repo. No cloud LLM calls, ever.
+- No cloud API keys anywhere in the repo — keys live only in environment variables / `.env` (gitignored). The runtime agent (`qa_agent/`) makes no cloud LLM calls, ever; the evaluation layer (`evaluation/`) may, per the scoped exception in Forbidden Tools.
 - No real user PII in test data. Use synthetic QA questions only.
 
 ## When Unsure

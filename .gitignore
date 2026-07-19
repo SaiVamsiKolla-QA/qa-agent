@@ -19,6 +19,11 @@ chroma_db/
 data/istqb_docs/
 *.pdf
 
+# Evaluation run artifacts
+evaluation/outputs/
+.deepeval/
+.deepeval_telemetry.txt
+
 # macOS / editors
 .DS_Store
 .idea/
