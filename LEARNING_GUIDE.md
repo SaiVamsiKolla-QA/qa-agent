@@ -443,12 +443,54 @@ threshold file (`eval.yaml`) reviewable like any other code.
 
 ---
 
-# Part 5 — Future Concepts
+# Part 5 — Concepts Added During Implementation
 
-Added as the phases that introduce them land:
+## DeepEval's LLMTestCase anatomy (Phase 2)
 
-- **(stub — Phase 2)** DeepEval `LLMTestCase` anatomy; Poetry dependency
-  groups for eval-only installs.
+`LLMTestCase` is the unit DeepEval metrics consume — think of it as the
+"test fixture" for one evaluated interaction:
+
+- `input` — the question asked (our golden case's `question`).
+- `actual_output` — what the agent produced (`AgentResult.answer`).
+- `expected_output` — the reference answer, when one exists (optional;
+  ours arrive in Phase 3).
+- `retrieval_context` — the chunks the agent was actually given (we map
+  `AgentResult.retrieved` texts here). Faithfulness and Hallucination
+  judge the answer *against this*, which is why Phase 1's trace capture
+  was a prerequisite.
+
+**In this repo:** the mapping lives in one place —
+`evaluation/runners/agent_runner.py::to_llm_test_case()`. **Common
+mistake:** putting the *whole corpus* in `retrieval_context` instead of
+what the agent actually saw — that measures a system that doesn't exist.
+
+## Poetry dependency groups (Phase 2)
+
+`[tool.poetry.group.eval.dependencies]` keeps DeepEval (and its ~30
+transitive packages) out of the runtime footprint conceptually: the
+agent needs none of it, and `poetry install --without eval` gives a
+lean install. **In this repo:** `pyproject.toml`, group `eval`
+(deepeval, pyyaml). Same idea as the existing `dev` group for
+pytest/ruff.
+
+## Reading your first eval run (Phase 2)
+
+The first live run is worth studying —
+`evaluation/outputs/<run_id>/` from the q01 verification run:
+
+- `scores.json` → answer relevancy mean 0.67 (threshold 0.80 → FAIL).
+- `cases.jsonl` → full trace: retrieval scores [0.42, 0.39], not
+  abstained, 15 s latency, the exact prompts.
+- `run_meta.json` → judge model recorded — this run used the weak local
+  judge, so per DECISIONS.md ADR-013 the *number* is not quality
+  evidence; the *plumbing* it proves is.
+
+The failure itself is the system working: smollm2 answered about
+"systems adapting to changing user needs" — topic drift the old keyword
+harness scored as a terminology PASS, but the relevancy judge punished.
+
+Still to come:
+
 - **(stub — Phase 3)** Dataset governance: review checklists, versioning,
   category/difficulty slicing.
 - **(stub — Phase 4)** Judge calibration, verdict caching, baseline vs

@@ -73,7 +73,7 @@ Full diagrams and component contracts: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Phases
 
-### Phase 1 — Repository preparation  ⟵ CURRENT PHASE (complete — awaiting review)
+### Phase 1 — Repository preparation (complete — awaiting review, PR #2)
 - **Goal:** make the agent evaluable without changing its behavior.
 - **Deliverables:** documentation suite (this file, ARCHITECTURE.md,
   DECISIONS.md, LEARNING_GUIDE.md); `AgentResult` returned by
@@ -87,7 +87,7 @@ Full diagrams and component contracts: [ARCHITECTURE.md](ARCHITECTURE.md).
   byte-identical to before; `answer()` exposes traces.
 - **Estimated effort:** 3–4 focused hours (+ documentation).
 
-### Phase 2 — Evaluation harness skeleton
+### Phase 2 — Evaluation harness skeleton  ⟵ CURRENT PHASE (complete — awaiting review)
 - **Goal:** one golden case scored end-to-end through DeepEval.
 - **Deliverables:** `deepeval` dependency (new `[eval]` group); `evaluation/`
   scaffold; dataset schema validator; `agent_runner` + `eval_runner` running
@@ -174,8 +174,24 @@ Full diagrams and component contracts: [ARCHITECTURE.md](ARCHITECTURE.md).
 - [x] Branch pushed; draft PR opened against `main`
 - [x] Documentation synced to completed work
 
+### Phase 2 — Evaluation harness skeleton (complete — awaiting review)
+- [x] `deepeval` 4.1.1 + pyyaml in a Poetry `eval` group (verified on
+      Python 3.13)
+- [x] CLAUDE.md amendment: DeepEval allowed as evaluation harness; cloud
+      LLM APIs allowed in `evaluation/` only (judge/candidates)
+- [x] `evaluation/` scaffold: datasets / models / runners / configs /
+      outputs (gitignored)
+- [x] `datasets/schema.py` validator + `golden_v2.jsonl` seeded with q01
+- [x] `models/judge.py` — OpenAI-compatible judge wrapper (cloud or local)
+- [x] `runners/agent_runner.py` + `runners/eval_runner.py` — one command
+      scores a case and writes `outputs/<run_id>/` artifacts, exit code
+      gates on thresholds
+- [x] 25 new unit tests (89 total green); ruff clean
+- [x] End-to-end verified against live mimik: q01 scored 0.67 vs 0.80
+      threshold → run correctly FAILED with artifacts written
+- [x] Documentation synced; branch pushed; draft PR opened
+
 ### Remaining phases
-- [ ] Phase 2 — Evaluation harness skeleton
 - [ ] Phase 3 — Golden dataset v2
 - [ ] Phase 4 — Full metric suite
 - [ ] Phase 5 — CI integration
