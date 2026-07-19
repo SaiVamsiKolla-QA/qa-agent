@@ -1,0 +1,29 @@
+# Evaluation configuration. Thresholds and judge choice live here so a
+# quality-bar change is a reviewable one-line diff (ARCHITECTURE.md §2.3).
+
+dataset: evaluation/datasets/golden_v2.jsonl
+
+# Judge model — any OpenAI-compatible endpoint (DECISIONS.md ADR-007).
+# Default: cloud OpenAI; requires OPENAI_API_KEY in the environment.
+judge:
+  model: gpt-4.1-mini
+  base_url: null            # null = cloud OpenAI
+  api_key_env: OPENAI_API_KEY
+  temperature: 0.0
+  timeout: 60
+
+# Fully-local fallback (no API key needed) — swap the block above for:
+#   judge:
+#     model: smollm2-360m
+#     base_url: http://localhost:8083/mimik-ai/openai/v1
+#     api_key_env: MIMIK_API_KEY
+# Caveat: a 360M judge produces unreliable verdicts; use a >=14B local
+# model (e.g. Ollama qwen2.5:14b at http://localhost:11434/v1) for
+# offline runs you intend to trust. Never judge with a model weaker
+# than the candidates (LEARNING_GUIDE.md, "Judge models").
+
+# Metric thresholds. Phase 2 wires answer_relevancy only; Phase 4 adds
+# the rest (faithfulness, hallucination, abstain, citations, G-Eval).
+metrics:
+  answer_relevancy:
+    threshold: 0.80
