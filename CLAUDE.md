@@ -26,6 +26,8 @@ All implementation steps complete and committed:
 
 **Known limitation:** `smollm2-360m` (360M params) is too small for reliable structured output. RESULTS.md publishes the 3/10 baseline. See Known Limitations section below.
 
+**DeepEval evaluation effort (branch `deepeval`):** Phase 1 (evaluation-readiness refactor) is complete — `qa_expert.answer()` returns a structured `AgentResult` trace, `llm_client.chat()` supports client/model injection and optional `temperature`/`seed`/`max_tokens` (omitted when unset; runtime behavior unchanged). Test suite is now 64 tests (the "52" above predates post-Phase-1 polish commits). Plan and rationale live in ROADMAP.md, ARCHITECTURE.md, DECISIONS.md, LEARNING_GUIDE.md. DeepEval itself, cloud judge models, and the CLAUDE.md forbidden-tools amendment arrive in Phase 2.
+
 *Update this section whenever the step changes. Current status drives what Claude Code should and should not work on.*
 
 ## Project Context

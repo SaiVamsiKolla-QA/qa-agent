@@ -73,7 +73,7 @@ Full diagrams and component contracts: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Phases
 
-### Phase 1 — Repository preparation  ⟵ CURRENT PHASE
+### Phase 1 — Repository preparation  ⟵ CURRENT PHASE (complete — awaiting review)
 - **Goal:** make the agent evaluable without changing its behavior.
 - **Deliverables:** documentation suite (this file, ARCHITECTURE.md,
   DECISIONS.md, LEARNING_GUIDE.md); `AgentResult` returned by
@@ -163,16 +163,16 @@ Full diagrams and component contracts: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Progress Tracker
 
-### Phase 1 — Repository preparation (in progress)
+### Phase 1 — Repository preparation (complete — awaiting review)
 - [x] `deepeval` branch created from `main`
 - [x] ROADMAP.md, ARCHITECTURE.md, DECISIONS.md, LEARNING_GUIDE.md created
-- [ ] `llm_client.chat()` — generation controls + client/model injection
-- [ ] `config.py` + `.env.example` — `LLM_TEMPERATURE` / `LLM_SEED` /
+- [x] `llm_client.chat()` — generation controls + client/model injection
+- [x] `config.py` + `.env.example` — `LLM_TEMPERATURE` / `LLM_SEED` /
       `LLM_MAX_TOKENS`
-- [ ] `qa_expert.answer()` returns `AgentResult`; CLI + golden harness updated
-- [ ] Full test suite green; ruff check + format clean
-- [ ] Branch pushed; draft PR opened against `main`
-- [ ] Documentation synced to completed work
+- [x] `qa_expert.answer()` returns `AgentResult`; CLI + golden harness updated
+- [x] Full test suite green (64 tests); ruff check + format clean
+- [x] Branch pushed; draft PR opened against `main`
+- [x] Documentation synced to completed work
 
 ### Remaining phases
 - [ ] Phase 2 — Evaluation harness skeleton
