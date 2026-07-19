@@ -146,15 +146,19 @@ were the Phase 1 seams: `AgentResult` and LLM-client injection.
 ## 2.1 Target folder structure
 
 ```
-evaluation/                      (planned — Phase 2 scaffold)
-├── datasets/    golden_v2.jsonl, frozen contexts/, schema.py   (Phase 3)
-├── models/      base.py, adapters, factory.py                  (Phases 2, 6)
-├── runners/     agent_runner, eval_runner, benchmark_runner    (Phases 2, 6)
-├── metrics/     registry, deterministic + GEval metrics        (Phase 4)
-├── configs/     eval.yaml, models/*.yaml                       (Phases 2–6)
-├── baselines/   main.json (committed accepted scores)          (Phase 4)
-├── outputs/     raw per-run traces (gitignored)                (Phase 2)
-└── reports/     html/json/md reports, leaderboards (artifacts) (Phases 4–6)
+evaluation/                      (scaffold implemented — Phase 2)
+├── datasets/    schema.py + golden_v2.jsonl seed (implemented);
+│                frozen contexts/ + full dataset          (Phase 3)
+├── models/      judge.py OpenAI-compatible judge (implemented);
+│                candidate adapters + factory             (Phase 6)
+├── runners/     agent_runner, eval_runner (implemented);
+│                benchmark_runner                         (Phase 6)
+├── metrics/     registry, deterministic + GEval metrics  (Phase 4;
+│                answer_relevancy wired inline in eval_runner today)
+├── configs/     eval.yaml (implemented); models/*.yaml   (Phase 6)
+├── baselines/   main.json (committed accepted scores)    (Phase 4)
+├── outputs/     raw per-run traces, gitignored (implemented)
+└── reports/     html/json/md reports, leaderboards       (Phases 4–6)
 ```
 
 ## 2.2 Evaluation data flow
@@ -187,8 +191,9 @@ flowchart TD
 - **Inputs/outputs:** produced by the agent, consumed by CLI (`.answer`) and
   by the future `agent_runner` (everything).
 
-### Golden Dataset v2 (planned — Phase 3)
-- **What:** JSONL file, one case per line: `id`, `category`, `difficulty`,
+### Golden Dataset v2 (schema implemented — Phase 2; authoring — Phase 3)
+- **What:** JSONL file (`evaluation/datasets/golden_v2.jsonl`, currently
+  seeded with q01), one case per line: `id`, `category`, `difficulty`,
   `tags`, `question`, `expected_answer`, `ground_truth_facts`,
   `expected_retrieval` (source doc + pages), `frozen_context` pointer,
   `expected_behavior` (`answer` | `abstain`), legacy v1 keyword fields, and
@@ -226,20 +231,26 @@ flowchart TD
   candidate model is injected into the SUT through the Phase 1
   `llm_client.chat(client=…, model=…)` seam.
 
-### `agent_runner` (planned — Phase 2)
-- **What:** the only evaluation module that imports `qa_agent`. Takes a
-  dataset case + a built model, executes the agent (live or frozen-context
-  mode), maps the `AgentResult` to a DeepEval `LLMTestCase`.
+### `agent_runner` (implemented — Phase 2)
+- **What:** the only evaluation module that imports `qa_agent`
+  (`evaluation/runners/agent_runner.py`). Takes a dataset case, executes
+  the real agent (live retrieval; frozen-context mode arrives Phase 3),
+  and maps the `AgentResult` to a DeepEval `LLMTestCase`
+  (retrieved chunk texts → `retrieval_context`).
 - **Why:** one narrow bridge between eval world and SUT world.
 
-### `eval_runner` (planned — Phase 2)
-- **What:** orchestrates a single-model run: load + validate dataset, select
-  subset (smoke/full, by tags), run every case through `agent_runner`, run
-  the metric registry, aggregate, emit artifacts, compare against thresholds
-  and baseline, set the exit code.
+### `eval_runner` (implemented — Phase 2)
+- **What:** `python -m evaluation.runners.eval_runner [--case ID]` —
+  loads + validates config and dataset, runs every selected case through
+  `agent_runner`, scores with the configured metrics (Phase 2: Answer
+  Relevancy only), writes `outputs/<run_id>/{run_meta.json, cases.jsonl,
+  scores.json}`, prints a summary, and exits 0/1 against thresholds.
 - **Why:** the one command CI calls; exit code *is* the quality gate.
-- **Outputs:** `outputs/<run_id>/` (raw traces, replayable),
-  `reports/<run_id>/` (human-readable), exit code.
+- **Verified:** first live run scored q01 at 0.67 vs the 0.80 threshold —
+  the runner correctly failed on smollm2's topic-drifted answer.
+- **Judge:** `evaluation/models/judge.py` — one OpenAI-compatible wrapper
+  covers cloud OpenAI, Ollama, vLLM, and mimik; configured in
+  `configs/eval.yaml`, key read from a named env var.
 
 ### DeepEval + metric registry (planned — Phase 4)
 - **What:** DeepEval supplies judge-based metrics (Answer Relevancy ≥ 0.80,

@@ -239,3 +239,46 @@ Companions: [ROADMAP.md](ROADMAP.md) · [ARCHITECTURE.md](ARCHITECTURE.md) ·
 - **Trade-offs:** a slightly larger commit.
 - **Future implications:** none — v1 harness files retire in Phase 3/4, and
   this ADR documents why they survived Phase 1 intact.
+
+## ADR-012 — Stacked branches: one branch and one draft PR per phase
+
+- **Decision:** each phase gets its own branch stacked on the previous one
+  (`deepeval` → `deepeval-phase-2` → …), with a draft PR whose base is the
+  previous phase's branch. Phase 1's PR targets `main`.
+- **Context:** Phase 2 started while Phase 1's PR was still awaiting
+  review; committing Phase 2 onto the same branch would have muddied that
+  review, and the project rule is "not the entire plan in one PR."
+- **Alternatives:** keep appending to one branch/PR (reviewable phases
+  dissolve into one megadiff); wait for each review before starting the
+  next phase (serializes work on a solo project).
+- **Why:** each PR stays a focused, phase-sized diff; review order matches
+  merge order.
+- **Trade-offs:** stacked PRs must be merged in order, and later branches
+  need a rebase if review changes an earlier one.
+- **Future implications:** after Phase 1 merges to `main`, retarget the
+  Phase 2 PR base to `main`; repeat per phase.
+
+## ADR-013 — Weak local judge is for mechanical verification only
+
+- **Decision:** running the eval pipeline with `smollm2-360m` as judge is
+  allowed to verify the *machinery* (config → agent → metric → artifacts →
+  exit code) but its scores are never treated as quality data, never
+  baselined, and never gate anything. Trusted runs require a strong judge
+  (cloud, or a ≥14B local model), configured in `eval.yaml`.
+- **Context:** Phase 2's end-to-end verification ran on a machine with no
+  cloud API keys and no Ollama; mimik's smollm2 was the only available
+  judge. The run worked (q01 scored 0.67, correctly failing the 0.80
+  threshold) but the judge's stated *reason* was low-quality — it rambled
+  its own definition instead of critiquing the answer.
+- **Alternatives:** block verification until an API key exists (couples
+  progress to credentials); trust the weak judge's numbers (violates the
+  "never judge with a model weaker than the candidates" rule in
+  LEARNING_GUIDE.md).
+- **Why:** separates "does the pipeline work?" (any judge proves it) from
+  "are the scores meaningful?" (only a strong judge provides it).
+- **Trade-offs:** numbers exist that must not be quoted as quality
+  evidence; mitigated by recording the judge model in every
+  `run_meta.json`.
+- **Future implications:** Phase 4 threshold calibration and Phase 5 CI
+  gating happen only against a strong judge; `run_meta.json`'s
+  `judge_model` field is the audit trail.
