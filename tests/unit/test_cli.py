@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from qa_agent.agents.qa_expert import AgentResult
 from qa_agent.cli import _cmd_ask, _cmd_ping
 from qa_agent.llm_client import MimikUnavailableError
 
@@ -30,12 +31,21 @@ def test_cmd_ping_exits_with_error_on_mimik_unavailable(
 def test_cmd_ask_calls_qa_expert_and_prints_result(
     capsys: pytest.CaptureFixture,
 ) -> None:
+    """_cmd_ask prints exactly the answer text of the AgentResult —
+    stdout behavior is unchanged by the structured return type."""
     args = argparse.Namespace(question="What is metamorphic testing?")
-    with patch(
-        "qa_agent.cli.qa_expert.answer", return_value="test answer"
-    ) as mock_answer:
+    result = AgentResult(
+        answer="test answer",
+        retrieved=[],
+        abstained=False,
+        system_prompt="system",
+        user_message="user",
+        model_name="test-model",
+        latency_s=0.01,
+    )
+    with patch("qa_agent.cli.qa_expert.answer", return_value=result) as mock_answer:
         _cmd_ask(args)
-    assert "test answer" in capsys.readouterr().out
+    assert capsys.readouterr().out == "test answer\n"
     mock_answer.assert_called_once_with(args.question)
 
 

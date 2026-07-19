@@ -25,7 +25,7 @@ def test_istqb_question(entry: dict) -> None:
     if entry["type"] != "istqb":
         pytest.skip("not an istqb entry")
 
-    answer = qa_expert.answer(entry["question"])
+    answer = qa_expert.answer(entry["question"]).answer
 
     failures = []
 
@@ -54,6 +54,6 @@ def test_abstain_trigger(entry: dict) -> None:
     if entry["type"] != "abstain_trigger":
         pytest.skip("not an abstain_trigger entry")
 
-    answer = qa_expert.answer(entry["question"])
+    answer = qa_expert.answer(entry["question"]).answer
     passed, details = score_abstain_trigger(answer)
     assert passed, f"Expected abstain message, got: {details}"
